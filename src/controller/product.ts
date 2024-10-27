@@ -21,7 +21,7 @@ const addStock = async (updates: { type: string; item: string; quantity: number;
             quantity,
             action: 'added',
             date: new Date(),
-            specification
+            specification:specification
         });
         await product.save();
         updatedProducts.push(product);
@@ -48,7 +48,7 @@ const addSoldStock = async (updates: { type: string; item: string; quantity: num
             quantity,
             action: 'sold',
             date: new Date(),
-            specification
+            specification:specification
 
         });
         await product.save();
