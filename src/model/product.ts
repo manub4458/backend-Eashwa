@@ -34,10 +34,14 @@ const productSchema = new Schema({
         type: String,
         required: true,
     },
+    specification: {
+        type: String,
+    },
     stockHistory: [{
         date: { type: Date, default: Date.now },
         user: { type: String, required: true },
         quantity: { type: Number, required: true },
+        specification : { type: String},
         action: { type: String, enum: ['added', 'sold'], required: true },
     }],
 });

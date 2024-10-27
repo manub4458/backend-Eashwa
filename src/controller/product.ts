@@ -2,10 +2,10 @@ import { Request, Response } from "express";
 import Product from "../model/product";
  
  
-const addStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string }[]) => {
+const addStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string, specification: string}[]) => {
     const updatedProducts: any[] = [];
  
-    for (const { type, item, quantity, updatedBy } of updates) {
+    for (const { type, item, quantity, updatedBy, specification } of updates) {
         const product = await Product.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
@@ -15,11 +15,13 @@ const addStock = async (updates: { type: string; item: string; quantity: number;
  
         product.currentStock = currentStock + quantityToAdd;
         product.updatedBy = updatedBy;
+        product.specification = specification;
         product.stockHistory.push({
             user: updatedBy,
             quantity,
             action: 'added',
             date: new Date(),
+            specification
         });
         await product.save();
         updatedProducts.push(product);
@@ -28,10 +30,10 @@ const addStock = async (updates: { type: string; item: string; quantity: number;
     return updatedProducts;
 };
  
-const addSoldStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string }[]) => {
+const addSoldStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string, specification: string }[]) => {
     const updatedProducts: any[] = [];
  
-    for (const { type, item, quantity, updatedBy } of updates) {
+    for (const { type, item, quantity, updatedBy, specification } of updates) {
         const product = await Product.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
@@ -40,11 +42,14 @@ const addSoldStock = async (updates: { type: string; item: string; quantity: num
         const quantityToAdd = Number(quantity);
         product.soldStock =  currentSoldStock + quantityToAdd;
         product.updatedBy = updatedBy;
+        product.specification = specification;
         product.stockHistory.push({
             user: updatedBy,
             quantity,
             action: 'sold',
             date: new Date(),
+            specification
+
         });
         await product.save();
         updatedProducts.push(product);
@@ -114,7 +119,7 @@ export const getBatteriesStock = async (req: Request, res: Response) => {
             soldStock: battery.soldStock,
             remainingStock: battery.currentStock - battery.soldStock,
             lastUpdated: battery.lastUpdated,
-            updatedBy: battery.updatedBy
+            updatedBy: battery.updatedBy,
         }));
  
         res.json({
@@ -170,6 +175,7 @@ export const getStockHistory = async (req: Request, res: Response) => {
             quantity: entry.quantity,
             user: entry.user,
             date: entry.date,
+            specification: entry.specification
         }))
     );
  
