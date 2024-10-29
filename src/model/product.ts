@@ -36,6 +36,7 @@ const productSchema = new Schema({
     },
     specification: {
         type: String,
+        default:''
     },
     stockHistory: [{
         date: { type: Date, default: Date.now },
