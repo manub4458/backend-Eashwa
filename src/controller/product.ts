@@ -175,7 +175,7 @@ export const getStockHistory = async (req: Request, res: Response) => {
             quantity: entry.quantity,
             user: entry.user,
             date: entry.date,
-            specification: entry.specification
+            specification: entry.specification ? entry.specification : '-'
         }))
     );
  
