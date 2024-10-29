@@ -24,7 +24,6 @@ const authenticateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     // const refreshToken =auth && auth.split('+')[1];
     // const mmy = req.params.id; => may check this this may be correct
     const authToken = req.header('authorization');
-    console.log(authToken, req.header('authorization'));
     if (!authToken) {
         return res.status(401).send('Token not found');
     }

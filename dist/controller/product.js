@@ -16,18 +16,22 @@ exports.getStockHistory = exports.getChargersStock = exports.getBatteriesStock =
 const product_1 = __importDefault(require("../model/product"));
 const addStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedProducts = [];
-    for (const { type, item, quantity, updatedBy } of updates) {
+    for (const { type, item, quantity, updatedBy, specification } of updates) {
         const product = yield product_1.default.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
-        product.currentStock += quantity;
+        const currentStock = Number(product.currentStock);
+        const quantityToAdd = Number(quantity);
+        product.currentStock = currentStock + quantityToAdd;
         product.updatedBy = updatedBy;
+        product.specification = specification;
         product.stockHistory.push({
             user: updatedBy,
             quantity,
             action: 'added',
             date: new Date(),
+            speci: specification
         });
         yield product.save();
         updatedProducts.push(product);
@@ -36,15 +40,20 @@ const addStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const addSoldStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedProducts = [];
-    for (const { type, item, quantity, updatedBy } of updates) {
+    for (const { type, item, quantity, updatedBy, specification } of updates) {
         const product = yield product_1.default.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
-        product.soldStock += quantity;
+        console.log(specification);
+        const currentSoldStock = Number(product.soldStock);
+        const quantityToAdd = Number(quantity);
+        product.soldStock = currentSoldStock + quantityToAdd;
         product.updatedBy = updatedBy;
+        product.specification = specification;
         product.stockHistory.push({
             user: updatedBy,
+            speci: specification,
             quantity,
             action: 'sold',
             date: new Date(),
@@ -55,13 +64,14 @@ const addSoldStock = (updates) => __awaiter(void 0, void 0, void 0, function* ()
     return updatedProducts;
 });
 const createProductHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { type, item, currentStock, soldStock, updatedBy } = req.body;
+    const { type, item, currentStock, soldStock, updatedBy, specification } = req.body;
     const newProduct = new product_1.default({
         type,
         item,
         currentStock,
         soldStock,
         updatedBy,
+        specification,
     });
     try {
         const savedProduct = yield newProduct.save();
@@ -114,7 +124,7 @@ const getBatteriesStock = (req, res) => __awaiter(void 0, void 0, void 0, functi
             soldStock: battery.soldStock,
             remainingStock: battery.currentStock - battery.soldStock,
             lastUpdated: battery.lastUpdated,
-            updatedBy: battery.updatedBy
+            updatedBy: battery.updatedBy,
         }));
         res.json({
             message: "Battery retrieved successfully.",
@@ -164,6 +174,7 @@ const getStockHistory = (req, res) => __awaiter(void 0, void 0, void 0, function
         quantity: entry.quantity,
         user: entry.user,
         date: entry.date,
+        specification: entry.speci ? entry.speci : '-'
     })));
     res.json({
         message: `${type.charAt(0).toUpperCase() + type.slice(1)} stock history retrieved successfully.`,
