@@ -21,7 +21,7 @@ const addStock = async (updates: { type: string; item: string; quantity: number;
             quantity,
             action: 'added',
             date: new Date(),
-            specification:specification
+            speci:specification
         });
         await product.save();
         updatedProducts.push(product);
@@ -38,6 +38,7 @@ const addSoldStock = async (updates: { type: string; item: string; quantity: num
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
+        console.log(specification);
         const currentSoldStock = Number(product.soldStock);
         const quantityToAdd = Number(quantity);
         product.soldStock =  currentSoldStock + quantityToAdd;
@@ -45,10 +46,10 @@ const addSoldStock = async (updates: { type: string; item: string; quantity: num
         product.specification = specification;
         product.stockHistory.push({
             user: updatedBy,
+            speci: specification,
             quantity,
             action: 'sold',
             date: new Date(),
-            specification:specification
 
         });
         await product.save();
@@ -176,7 +177,7 @@ export const getStockHistory = async (req: Request, res: Response) => {
             quantity: entry.quantity,
             user: entry.user,
             date: entry.date,
-            specification: entry.specification ? entry.specification : '-'
+            specification: entry.speci ? entry.speci : '-'
         }))
     );
  
