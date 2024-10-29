@@ -11,7 +11,6 @@ export const authenticateToken = async(req: Request, res: Response, next: NextFu
     // const mmy = req.params.id; => may check this this may be correct
 
     const authToken =  req.header('authorization');
-    console.log(authToken, req.header('authorization'));
     if (!authToken) {
         return res.status(401).send('Token not found');
     }
