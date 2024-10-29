@@ -59,7 +59,7 @@ const addSoldStock = async (updates: { type: string; item: string; quantity: num
 };
  
 export const createProductHandler = async (req: Request, res: Response) => {
-    const { type, item, currentStock, soldStock, updatedBy } = req.body;
+    const { type, item, currentStock, soldStock, updatedBy, specification } = req.body;
  
     const newProduct = new Product({
         type,
@@ -67,6 +67,7 @@ export const createProductHandler = async (req: Request, res: Response) => {
         currentStock,
         soldStock,
         updatedBy,
+        specification,
     });
  
     try {
