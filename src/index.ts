@@ -21,7 +21,7 @@ const app: Application = express();
 const port = process.env.PORT || 8000;
 
 var corsOptions = {
-  origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app"],
+  origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app","https://eashwastock.in/"],
   credentials: true
 };
 
