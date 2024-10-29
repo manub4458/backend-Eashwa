@@ -35,10 +35,15 @@ const productSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    specification: {
+        type: String,
+        required: true,
+    },
     stockHistory: [{
             date: { type: Date, default: Date.now },
             user: { type: String, required: true },
             quantity: { type: Number, required: true },
+            speci: { type: String, required: true },
             action: { type: String, enum: ['added', 'sold'], required: true },
         }],
 });
