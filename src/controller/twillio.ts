@@ -1,11 +1,15 @@
 import { Request, Response } from "express";
 import twilio from "twilio";
 import { getFormattedDate } from "../utils/emailer";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const client = twilio(
-  "ACc03a2fcf7c68a2969352289d6042b5fb",
-  "d43a11b9dfa73a5c85761c24202f1553"
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
 );
+
 
 var phone = "0000000";
 
@@ -17,6 +21,8 @@ export const submitRequest = async (
     req.body;
   const time = getFormattedDate();
   phone = userPhoneNumber;
+  console.log(process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN);
   try {
     await client.messages.create({
       from: "whatsapp:+14155238886", 
