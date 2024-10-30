@@ -21,11 +21,12 @@ const db = require("./config/db");
 const user_1 = __importDefault(require("./routes/user"));
 const product_1 = __importDefault(require("./routes/product"));
 dotenv_1.default.config();
-const app = (0, express_1.default)();
+app.options('*', (0, cors_1.default)(corsOptions));
 const port = process.env.PORT || 8000;
 var corsOptions = {
-    origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app", "https://eashwastock.in/"],
-    credentials: true
+    origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app", "https://eashwastock.in"],
+    credentials: true,
+    optionsSuccessStatus: 200
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(body_parser_1.default.urlencoded({ extended: false }));
