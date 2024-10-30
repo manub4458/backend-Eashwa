@@ -24,7 +24,7 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 8000;
 var corsOptions = {
-    origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app", "https://eashwastock.in/"],
+    origin: ["http://localhost:3000", "https://eashwa-frontend-iptp.vercel.app", "https://eashwastock.in"],
     credentials: true
 };
 app.use((0, cors_1.default)(corsOptions));
