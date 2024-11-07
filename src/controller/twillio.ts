@@ -50,7 +50,7 @@ export const whatsappWebhook = async (
   const userPhoneNumber = `whatsapp:${req.body.userPhoneNumber}`;
   console.log("Incoming Webhook Body:", req.body);
   try {
-    if (messageFromAdmin === "accept") {
+    if (messageFromAdmin === "Accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
         to: userPhoneNumber,
@@ -58,7 +58,7 @@ export const whatsappWebhook = async (
       });
 
       res.status(200).send("<Response></Response>");
-    } else if (messageFromAdmin === "reject") {
+    } else if (messageFromAdmin === "Reject") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
         to: "whatsapp:+918077335703",
