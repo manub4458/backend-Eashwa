@@ -50,11 +50,11 @@ export const whatsappWebhook = async (
   const userPhoneNumber = `whatsapp:${req.body.From}`;
   console.log("Incoming Webhook Body:", req.body);
   var reason = "";
-  const contentVariables: { [key: string]: string } = {
-    "1": reason,
-  };
+  // const contentVariables: { [key: string]: string } = {
+  //   "1": reason,
+  // };
   try {
-    if (messageFromAdmin === "Accept") {
+    if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
         to: userPhoneNumber,
@@ -62,33 +62,35 @@ export const whatsappWebhook = async (
       });
 
       res.status(200).send("<Response></Response>");
-    } else if (messageFromAdmin === "Reject") {
-      await client.messages.create({
-        from: "whatsapp:+919911130173",
-        to: "whatsapp:+918077335703",
-        contentSid:"HXc4e1cf97fcc0a1434c8154b59aa99b9a",
-      });
+    } 
+    // else if (messageFromAdmin === "reject") {
+    //   await client.messages.create({
+    //     from: "whatsapp:+919911130173",
+    //     to: "whatsapp:+918077335703",
+    //     contentSid:"HXc4e1cf97fcc0a1434c8154b59aa99b9a",
+    //   });
 
-      res.status(200).send("<Response></Response>");
-    } else if (messageFromAdmin.startsWith("reject reason:")) {
-      const rejectionReason = messageFromAdmin
-        .replace(/^reject reason:\s*/i, "")
-        .trim();
+    //   res.status(200).send("<Response></Response>");
+    // } 
+    // else if (messageFromAdmin.startsWith("reject reason:")) {
+    //   const rejectionReason = messageFromAdmin
+    //     .replace(/^reject reason:\s*/i, "")
+    //     .trim();
         
-      contentVariables["1"] = rejectionReason;
-      await client.messages.create({
-        from: "whatsapp:+919911130173",
-        to: userPhoneNumber,
-        contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
-        //@ts-ignore
-        contentVariables:contentVariables
+    //   contentVariables["1"] = rejectionReason;
+    //   await client.messages.create({
+    //     from: "whatsapp:+919911130173",
+    //     to: userPhoneNumber,
+    //     contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+    //     //@ts-ignore
+    //     contentVariables:contentVariables
 
-      });
+    //   });
 
-      res.status(200).send("<Response></Response>");
-    } else {
-      res.status(200).send("<Response></Response>");
-    }
+    //   res.status(200).send("<Response></Response>");
+    // } else {
+    //   res.status(200).send("<Response></Response>");
+    // }
   } catch (error) {
     console.error("Error handling admin response:", error);
     res
