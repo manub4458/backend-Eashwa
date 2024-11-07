@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getStockHistory = exports.getChargersStock = exports.getBatteriesStock = exports.addSoldStockHandler = exports.addStockHandler = exports.createProductHandler = void 0;
+exports.getStockHistory = exports.getVehiclesStock = exports.getChargersStock = exports.getBatteriesStock = exports.addSoldStockHandler = exports.addStockHandler = exports.createProductHandler = void 0;
 const product_1 = __importDefault(require("../model/product"));
 const addStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedProducts = [];
@@ -159,6 +159,30 @@ const getChargersStock = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.getChargersStock = getChargersStock;
+const getVehiclesStock = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const vehicles = yield product_1.default.find({ type: 'Vehicle' });
+        const response = vehicles.map(vehicle => ({
+            id: vehicle._id,
+            type: vehicle.type,
+            item: vehicle.item,
+            currentStock: vehicle.currentStock,
+            soldStock: vehicle.soldStock,
+            remainingStock: vehicle.currentStock - vehicle.soldStock,
+            lastUpdated: vehicle.lastUpdated,
+            updatedBy: vehicle.updatedBy,
+            // specifications: vehicle.specifications,
+        }));
+        res.json({
+            message: "Vehicle stock retrieved successfully.",
+            products: response,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+exports.getVehiclesStock = getVehiclesStock;
 const getStockHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { type } = req.params;
     if (!['battery', 'charger'].includes(type.toLowerCase())) {

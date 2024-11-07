@@ -10,4 +10,5 @@ router.post('/add-sold-stock', authMiddleware_1.authenticateToken, product_1.add
 router.get('/batteries-stock', product_1.getBatteriesStock);
 router.get('/chargers-stock', product_1.getChargersStock);
 router.get('/stock-history/:type', product_1.getStockHistory);
+router.get('/vehicles-stock', product_1.getVehiclesStock);
 exports.default = router;
