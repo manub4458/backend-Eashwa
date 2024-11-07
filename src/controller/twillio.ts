@@ -57,9 +57,8 @@ export const whatsappWebhook = async (
     if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
-        to: userPhoneNumber,
+          to: `whatsapp:+917668612989`,
         contentSid:"HXb5947d790365975417f2bcc62852ab88",
-        contentVariables: ""
       });
 
       res.status(200).send("<Response></Response>");
@@ -81,7 +80,7 @@ export const whatsappWebhook = async (
       contentVariables["1"] = rejectionReason;
       await client.messages.create({
         from: "whatsapp:+919911130173",
-        to: userPhoneNumber,
+        to: `whatsapp:+917668612989`,
         contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
         //@ts-ignore
         contentVariables:contentVariables
