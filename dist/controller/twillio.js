@@ -58,7 +58,8 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
                 to: userPhoneNumber,
-                contentSid: "HXb5947d790365975417f2bcc62852ab88"
+                contentSid: "HXb5947d790365975417f2bcc62852ab88",
+                contentVariables: ""
             });
             res.status(200).send("<Response></Response>");
         }
