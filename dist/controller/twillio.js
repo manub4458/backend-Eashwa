@@ -45,35 +45,67 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.submitRequest = submitRequest;
+// export const whatsappWebhook = async (
+//   req: Request,
+//   res: Response
+// ): Promise<void> => {
+//   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
+//   const userPhoneNumber = `whatsapp:${req.body.From}`;
+//   console.log("Incoming Webhook Body:", req.body);
+//   try {
+//     if (messageFromAdmin === "Accept") {
+//       await client.messages.create({
+//         from: "whatsapp:+919911130173",
+//         to: userPhoneNumber,
+//         body: `Your request has been accepted by Eashwa. Thank you for your patience.`,
+//       });
+//       res.status(200).send("<Response></Response>");
+//     } else if (messageFromAdmin === "Reject") {
+//       await client.messages.create({
+//         from: "whatsapp:+919911130173",
+//         to: "whatsapp:+918077335703",
+//         body: `The user has rejected the request. Please provide a reason for rejection.`,
+//       });
+//       res.status(200).send("<Response></Response>");
+//     } else if (messageFromAdmin.startsWith("reject reason:")) {
+//       const rejectionReason = messageFromAdmin
+//         .replace(/^reject reason:\s*/i, "")
+//         .trim();
+//       await client.messages.create({
+//         from: "whatsapp:+919911130173",
+//         to: userPhoneNumber,
+//         body: `Your request was rejected by Eashwa. Reason: ${rejectionReason}`,
+//       });
+//       res.status(200).send("<Response></Response>");
+//     } else {
+//       res.status(200).send("<Response></Response>");
+//     }
+//   } catch (error) {
+//     console.error("Error handling admin response:", error);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Failed to process admin response." });
+//   }
+// };
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-    const userPhoneNumber = `whatsapp:${req.body.From}`;
-    console.log("Incoming Webhook Body:", req.body);
+    const userPhoneNumber = `whatsapp:+917668612989`;
+    console.log("ss", req.body);
     try {
-        if (messageFromAdmin === "Accept") {
+        if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
                 to: userPhoneNumber,
-                body: `Your request has been accepted by Eashwa. Thank you for your patience.`,
+                body: `Your request has been accepted by the Eashwa. Thank you for your patience.`,
             });
             res.status(200).send("<Response></Response>");
         }
-        else if (messageFromAdmin === "Reject") {
+        else if (messageFromAdmin.startsWith("reject:")) {
+            const rejectionReason = messageFromAdmin.replace(/^reject:\s*/i, "");
             yield client.messages.create({
-                from: "whatsapp:+919911130173",
-                to: "whatsapp:+918077335703",
-                body: `The user has rejected the request. Please provide a reason for rejection.`,
-            });
-            res.status(200).send("<Response></Response>");
-        }
-        else if (messageFromAdmin.startsWith("reject reason:")) {
-            const rejectionReason = messageFromAdmin
-                .replace(/^reject reason:\s*/i, "")
-                .trim();
-            yield client.messages.create({
-                from: "whatsapp:+919911130173",
+                from: "whatsapp:+14155238886",
                 to: userPhoneNumber,
-                body: `Your request was rejected by Eashwa. Reason: ${rejectionReason}`,
+                body: `Your request was rejected by the Eashwa. Reason: ${rejectionReason}`,
             });
             res.status(200).send("<Response></Response>");
         }
