@@ -47,7 +47,7 @@ export const whatsappWebhook = async (
   res: Response
 ): Promise<void> => {
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-  const userPhoneNumber = `whatsapp:${req.body.userPhoneNumber}`;
+  const userPhoneNumber = `whatsapp:${req.body.From}`;
   console.log("Incoming Webhook Body:", req.body);
   try {
     if (messageFromAdmin === "Accept") {
