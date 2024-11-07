@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import twilio from "twilio";
-import { getFormattedDate, sendMail } from "../utils/emailer";
+import { getFormattedDate } from "../utils/emailer";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -42,89 +42,58 @@ export const submitRequest = async (
   }
 };
 
-// export const whatsappWebhook = async (
-//   req: Request,
-//   res: Response
-// ): Promise<void> => {
-//   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-//   const userPhoneNumber = `whatsapp:${req.body.From}`;
-//   console.log("Incoming Webhook Body:", req.body);
-//   try {
-//     if (messageFromAdmin === "Accept") {
-//       await client.messages.create({
-//         from: "whatsapp:+919911130173",
-//         to: userPhoneNumber,
-//         body: `Your request has been accepted by Eashwa. Thank you for your patience.`,
-//       });
-
-//       res.status(200).send("<Response></Response>");
-//     } else if (messageFromAdmin === "Reject") {
-//       await client.messages.create({
-//         from: "whatsapp:+919911130173",
-//         to: "whatsapp:+918077335703",
-//         body: `The user has rejected the request. Please provide a reason for rejection.`,
-//       });
-
-//       res.status(200).send("<Response></Response>");
-//     } else if (messageFromAdmin.startsWith("reject reason:")) {
-//       const rejectionReason = messageFromAdmin
-//         .replace(/^reject reason:\s*/i, "")
-//         .trim();
-//       await client.messages.create({
-//         from: "whatsapp:+919911130173",
-//         to: userPhoneNumber,
-//         body: `Your request was rejected by Eashwa. Reason: ${rejectionReason}`,
-//       });
-
-//       res.status(200).send("<Response></Response>");
-//     } else {
-//       res.status(200).send("<Response></Response>");
-//     }
-//   } catch (error) {
-//     console.error("Error handling admin response:", error);
-//     res
-//       .status(500)
-//       .json({ success: false, message: "Failed to process admin response." });
-//   }
-// };
-
 export const whatsappWebhook = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
+  const userPhoneNumber = `whatsapp:${req.body.From}`;
+  console.log("Incoming Webhook Body:", req.body);
+  var reason = "";
+  const contentVariables: { [key: string]: string } = {
+    "1": reason,
+  };
+  try {
+    if (messageFromAdmin === "Accept") {
+      await client.messages.create({
+        from: "whatsapp:+919911130173",
+        to: userPhoneNumber,
+        contentSid:"HXb5947d790365975417f2bcc62852ab88"
+      });
 
-  const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : ""; 
-  const userPhoneNumber = `whatsapp:+917668612989`; 
-  console.log("ss",req.body);
+      res.status(200).send("<Response></Response>");
+    } else if (messageFromAdmin === "Reject") {
+      await client.messages.create({
+        from: "whatsapp:+919911130173",
+        to: "whatsapp:+918077335703",
+        contentSid:"HXc4e1cf97fcc0a1434c8154b59aa99b9a",
+      });
 
-  sendMail("piyushthakur241199@gmail.com", "Password Reset OTP", `Your OTP for password reset is: 1700. It will expire in 10 minutes.`);
+      res.status(200).send("<Response></Response>");
+    } else if (messageFromAdmin.startsWith("reject reason:")) {
+      const rejectionReason = messageFromAdmin
+        .replace(/^reject reason:\s*/i, "")
+        .trim();
+        
+      contentVariables["1"] = rejectionReason;
+      await client.messages.create({
+        from: "whatsapp:+919911130173",
+        to: userPhoneNumber,
+        contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+        //@ts-ignore
+        contentVariables:contentVariables
 
-  // try {
-  //   if (messageFromAdmin === "accept") {
-  //     await client.messages.create({
-  //       from: "whatsapp:+919911130173",
-  //       to: userPhoneNumber,
-  //       body: `Your request has been accepted by the Eashwa. Thank you for your patience.`,
-  //     });
+      });
 
-  //     res.status(200).send("<Response></Response>");
-  //   } else if (messageFromAdmin.startsWith("reject:")) {
-  //     const rejectionReason = messageFromAdmin.replace(/^reject:\s*/i, "");
-
-  //     await client.messages.create({
-  //       from: "whatsapp:+14155238886",
-  //       to: userPhoneNumber,
-  //       body: `Your request was rejected by the Eashwa. Reason: ${rejectionReason}`,
-  //     });
-
-  //     res.status(200).send("<Response></Response>");
-  //   } else {
-  //     res.status(200).send("<Response></Response>");
-  //   }
-  // } catch (error) {
-  //   console.error("Error handling admin response:", error);
-  //   res
-  //     .status(500)
-  //     .json({ success: false, message: "Failed to process admin response." });
-  // }
+      res.status(200).send("<Response></Response>");
+    } else {
+      res.status(200).send("<Response></Response>");
+    }
+  } catch (error) {
+    console.error("Error handling admin response:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to process admin response." });
+  }
 };
+
