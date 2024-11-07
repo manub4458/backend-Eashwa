@@ -185,23 +185,29 @@ const getVehiclesStock = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getVehiclesStock = getVehiclesStock;
 const getStockHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { type } = req.params;
-    if (!['battery', 'charger'].includes(type.toLowerCase())) {
-        return res.status(400).json({ message: "Invalid type. Use 'battery' or 'charger'." });
+    // Ensure the type is one of the allowed product types: 'battery', 'charger', or 'vehicle'
+    if (!['battery', 'charger', 'vehicle'].includes(type.toLowerCase())) {
+        return res.status(400).json({ message: "Invalid type. Use 'battery', 'charger', or 'vehicle'." });
     }
-    const products = yield product_1.default.find({ type: type.charAt(0).toUpperCase() + type.slice(1) });
+    // Capitalize the first letter of the product type to match the model naming convention
+    const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
+    // Fetch products based on the type
+    const products = yield product_1.default.find({ type: formattedType });
+    // If no products found, return a 404 response
     if (products.length === 0) {
         return res.status(404).json({ message: `No ${type}s found.` });
     }
+    // Map over the products and flatten the stock history
     const history = products.flatMap(product => product.stockHistory.map(entry => ({
         item: product.item,
         action: entry.action,
         quantity: entry.quantity,
         user: entry.user,
         date: entry.date,
-        specification: entry.speci ? entry.speci : '-'
+        specification: entry.speci ? entry.speci : '-' // Ensure specification is included
     })));
     res.json({
-        message: `${type.charAt(0).toUpperCase() + type.slice(1)} stock history retrieved successfully.`,
+        message: `${formattedType} stock history retrieved successfully.`,
         history,
     });
 });
