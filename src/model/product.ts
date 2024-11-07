@@ -4,7 +4,7 @@ const productSchema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: ['Battery', 'Charger'],
+        enum: ['Battery', 'Charger','Vehicle'],
     },
     item: {
         type: String,
@@ -14,6 +14,7 @@ const productSchema = new Schema({
             'Lead Acid Charger',
             'Lithium-ion Battery',
             'Lithium-ion Charger',
+            'Vehicle',
         ],
     },
     currentStock: {

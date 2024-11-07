@@ -156,7 +156,31 @@ export const getChargersStock = async (req: Request, res: Response) => {
         res.status(500).json({ message: (error as Error).message });
     }
 };
- 
+export const getVehiclesStock = async (req: Request, res: Response) => {
+    try {
+        const vehicles = await Product.find({ type: 'Vehicle' });
+
+        const response = vehicles.map(vehicle => ({
+            id: vehicle._id,
+            type: vehicle.type,
+            item: vehicle.item,
+            currentStock: vehicle.currentStock,
+            soldStock: vehicle.soldStock,
+            remainingStock: vehicle.currentStock - vehicle.soldStock,
+            lastUpdated: vehicle.lastUpdated,
+            updatedBy: vehicle.updatedBy,
+            // specifications: vehicle.specifications,
+        }));
+
+        res.json({
+            message: "Vehicle stock retrieved successfully.",
+            products: response,
+        });
+    } catch (error) {
+        res.status(500).json({ message: (error as Error).message });
+    }
+};
+
 export const getStockHistory = async (req: Request, res: Response) => {
     const { type } = req.params;
  

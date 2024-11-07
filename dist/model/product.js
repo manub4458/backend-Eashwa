@@ -5,7 +5,7 @@ const productSchema = new mongoose_1.Schema({
     type: {
         type: String,
         required: true,
-        enum: ['Battery', 'Charger'],
+        enum: ['Battery', 'Charger', 'Vehicle'],
     },
     item: {
         type: String,
@@ -15,6 +15,7 @@ const productSchema = new mongoose_1.Schema({
             'Lead Acid Charger',
             'Lithium-ion Battery',
             'Lithium-ion Charger',
+            'Vehicle',
         ],
     },
     currentStock: {
