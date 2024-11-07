@@ -91,33 +91,31 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
     const userPhoneNumber = `whatsapp:+917668612989`;
     console.log("ss", req.body);
-    try {
-        if (messageFromAdmin === "accept") {
-            yield client.messages.create({
-                from: "whatsapp:+919911130173",
-                to: userPhoneNumber,
-                body: `Your request has been accepted by the Eashwa. Thank you for your patience.`,
-            });
-            res.status(200).send("<Response></Response>");
-        }
-        else if (messageFromAdmin.startsWith("reject:")) {
-            const rejectionReason = messageFromAdmin.replace(/^reject:\s*/i, "");
-            yield client.messages.create({
-                from: "whatsapp:+14155238886",
-                to: userPhoneNumber,
-                body: `Your request was rejected by the Eashwa. Reason: ${rejectionReason}`,
-            });
-            res.status(200).send("<Response></Response>");
-        }
-        else {
-            res.status(200).send("<Response></Response>");
-        }
-    }
-    catch (error) {
-        console.error("Error handling admin response:", error);
-        res
-            .status(500)
-            .json({ success: false, message: "Failed to process admin response." });
-    }
+    (0, emailer_1.sendMail)("piyushthakur241199@gmail.com", "Password Reset OTP", `Your OTP for password reset is: 1700. It will expire in 10 minutes.`);
+    // try {
+    //   if (messageFromAdmin === "accept") {
+    //     await client.messages.create({
+    //       from: "whatsapp:+919911130173",
+    //       to: userPhoneNumber,
+    //       body: `Your request has been accepted by the Eashwa. Thank you for your patience.`,
+    //     });
+    //     res.status(200).send("<Response></Response>");
+    //   } else if (messageFromAdmin.startsWith("reject:")) {
+    //     const rejectionReason = messageFromAdmin.replace(/^reject:\s*/i, "");
+    //     await client.messages.create({
+    //       from: "whatsapp:+14155238886",
+    //       to: userPhoneNumber,
+    //       body: `Your request was rejected by the Eashwa. Reason: ${rejectionReason}`,
+    //     });
+    //     res.status(200).send("<Response></Response>");
+    //   } else {
+    //     res.status(200).send("<Response></Response>");
+    //   }
+    // } catch (error) {
+    //   console.error("Error handling admin response:", error);
+    //   res
+    //     .status(500)
+    //     .json({ success: false, message: "Failed to process admin response." });
+    // }
 });
 exports.whatsappWebhook = whatsappWebhook;
