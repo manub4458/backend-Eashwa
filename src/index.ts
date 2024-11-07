@@ -6,7 +6,7 @@ import cookieParser from 'cookie-parser';
 import db = require('./config/db');
 import userRoutes from "./routes/user";
 import productRoutes from "./routes/product";
-// import requestRouter from "./routes/twillio";
+import requestRouter from "./routes/twillio";
 declare global {
     namespace Express {
       interface Request {
@@ -31,7 +31,7 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
-// app.use('/api/request', requestRouter)
+app.use('/api/request', requestRouter);
 app.use((err: Error, req: Request, res:Response, next: NextFunction) => {
     res.status(500).json({message: err.message});  
   });
