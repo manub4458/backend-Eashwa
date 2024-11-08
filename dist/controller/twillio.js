@@ -14,15 +14,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.whatsappWebhook = exports.submitRequest = void 0;
 const twilio_1 = __importDefault(require("twilio"));
-const emailer_1 = require("../utils/emailer");
 const dotenv_1 = __importDefault(require("dotenv"));
 const messageUser_1 = __importDefault(require("../model/messageUser"));
 dotenv_1.default.config();
 const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-var userNumber = "000000";
 const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, productDescription, vendorName, userPhoneNumber, amount } = req.body;
-    const time = (0, emailer_1.getFormattedDate)();
+    const { name, productDescription, vendorName, userPhoneNumber, amount, time } = req.body;
     try {
         const formResposne = yield client.messages.create({
             from: "whatsapp:+919911130173",
@@ -54,7 +51,6 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             });
             yield newMessage.save();
         }
-        console.log("whatsapp message", formResposne);
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
     catch (error) {
@@ -66,11 +62,8 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.submitRequest = submitRequest;
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-    console.log("Incoming Webhook Body:", req.body);
-    console.log("first number", userNumber);
     const body = req.body;
     const messageWhatsapp = yield messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
-    console.log("message user", messageWhatsapp);
     try {
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
