@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import twilio from "twilio";
-import { getFormattedDate } from "../utils/emailer";
 import dotenv from "dotenv";
 import messageUser from "../model/messageUser";
 
@@ -11,15 +10,12 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-var userNumber = "000000";
-
 export const submitRequest = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, productDescription, vendorName, userPhoneNumber, amount } =
+  const { name, productDescription, vendorName, userPhoneNumber, amount, time } =
     req.body;
-  const time = getFormattedDate();
 
   try {
     const formResposne = await client.messages.create({
@@ -56,10 +52,6 @@ export const submitRequest = async (
 
     }
 
-
-    console.log("whatsapp message", formResposne);
-
-
     res.status(200).json({ success: true, message: "Request sent to admin." });
   } catch (error) {
     res
@@ -73,11 +65,8 @@ export const whatsappWebhook = async (
   res: Response
 ): Promise<void> => {
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-  console.log("Incoming Webhook Body:", req.body);
-  console.log("first number", userNumber);
   const body = req.body;
   const messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
-  console.log("message user", messageWhatsapp);
   try {
     if (messageFromAdmin === "accept") {
       await client.messages.create({
