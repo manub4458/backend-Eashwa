@@ -52,17 +52,13 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.submitRequest = submitRequest;
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-    const userPhoneNumber = `whatsapp:${req.body.From}`;
+    const userPhoneNumber = `whatsapp:${req.body.userPhoneNumber}`;
     console.log("Incoming Webhook Body:", req.body);
-    var reason = "";
-    const contentVariables = {
-        "1": reason,
-    };
     try {
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+917668612989`,
+                to: `whatsapp:${userPhoneNumber}`,
                 contentSid: "HXb5947d790365975417f2bcc62852ab88",
             });
             res.status(200).send("<Response></Response>");
@@ -79,12 +75,10 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             const rejectionReason = messageFromAdmin
                 .replace(/^reject reason:\s*/i, "")
                 .trim();
-            contentVariables["1"] = rejectionReason;
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+917668612989`,
+                to: `whatsapp:${userPhoneNumber}`,
                 contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
-                //@ts-ignore
                 contentVariables: JSON.stringify({
                     "1": rejectionReason
                 })
