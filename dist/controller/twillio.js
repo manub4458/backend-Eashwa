@@ -92,7 +92,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     contentSid: "HXb5947d790365975417f2bcc62852ab88",
                 });
             }
-            else {
+            else if (req.body.From === "whatsapp:+917668612989") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
@@ -129,14 +129,20 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     //@ts-ignore
                     to: `whatsapp:+917668612989`,
                     contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+                    contentVariables: JSON.stringify({
+                        "1": rejectionReason
+                    })
                 });
             }
-            else {
+            else if (req.body.From === "whatsapp:+917668612989") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
                     to: `whatsapp:+918077335703`,
                     contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+                    contentVariables: JSON.stringify({
+                        "1": rejectionReason
+                    })
                 });
             }
             res.status(200).send("<Response></Response>");
