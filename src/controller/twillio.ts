@@ -79,6 +79,7 @@ export const whatsappWebhook = async (
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
   const body = req.body;
   const messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
+  console.log("ss", req.body);
   try {
     if (messageFromAdmin === "accept") {
       await client.messages.create({
