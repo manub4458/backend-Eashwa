@@ -22,7 +22,7 @@ export const submitRequest = async (
   const time = getFormattedDate();
 
   try {
-   const formResposne =  await client.messages.create({
+    const formResposne = await client.messages.create({
       from: "whatsapp:+919911130173",
       to: `whatsapp:+918077335703`,
       contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
@@ -34,13 +34,28 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
+    const existingUser = await messageUser.findOne({ whatsappNumber: userPhoneNumber });
+    if (existingUser) {
+      const updatedUser = await messageUser.updateOne(
+        { whatsappNumber: userPhoneNumber },
+        {
+          $set: {
+            messageId: formResposne.sid,
+            name,
+          },
+        }
+      );
+      console.log("whatsapp user updated", updatedUser)
+    } else {
+      const newMessage = new messageUser({
+        name,
+        messageId: formResposne.sid,
+        whatsappNumber: userPhoneNumber
+      });
+      await newMessage.save();
 
-    const newMessage = new messageUser({
-      name,
-      messageId: formResposne.sid,
-      whatsappNumber:userPhoneNumber
-    });
-    await newMessage.save();
+    }
+
 
     console.log("whatsapp message", formResposne);
 
@@ -61,28 +76,28 @@ export const whatsappWebhook = async (
   console.log("Incoming Webhook Body:", req.body);
   console.log("first number", userNumber);
   const body = req.body;
-  const messageWhatsapp = messageUser.findOne({messageId: body.OriginalRepliedMessageSid});
+  const messageWhatsapp = messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
   console.log("message user", messageWhatsapp);
   try {
     if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
         //@ts-ignore
-          to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
-        contentSid:"HXb5947d790365975417f2bcc62852ab88",
+        to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
+        contentSid: "HXb5947d790365975417f2bcc62852ab88",
       });
 
       res.status(200).send("<Response></Response>");
-    } 
+    }
     else if (messageFromAdmin === "reject") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
-          to: `whatsapp:+918077335703`,
-        contentSid:"HXc4e1cf97fcc0a1434c8154b59aa99b9a",
+        to: `whatsapp:+918077335703`,
+        contentSid: "HXc4e1cf97fcc0a1434c8154b59aa99b9a",
       });
 
       res.status(200).send("<Response></Response>");
-    } 
+    }
     else if (messageFromAdmin.startsWith("reject reason:")) {
       const rejectionReason = messageFromAdmin
         .replace(/^reject reason:\s*/i, "")
@@ -91,8 +106,8 @@ export const whatsappWebhook = async (
         from: "whatsapp:+919911130173",
         //@ts-ignore
         to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
-        contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
-        contentVariables:JSON.stringify({
+        contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+        contentVariables: JSON.stringify({
           "1": rejectionReason
         })
 
