@@ -38,7 +38,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "2": productDescription,
                 "3": vendorName,
                 "4": time,
-                "5": `₹${amount}`,
+                "5": amount,
             }),
         });
         res.status(200).json({ success: true, message: "Request sent to admin." });
@@ -85,7 +85,9 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 to: `whatsapp:+917668612989`,
                 contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
                 //@ts-ignore
-                contentVariables: contentVariables
+                contentVariables: JSON.stringify({
+                    "1": rejectionReason
+                })
             });
             res.status(200).send("<Response></Response>");
         }

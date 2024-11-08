@@ -35,7 +35,7 @@ export const submitRequest = async (
         "2": productDescription,
         "3": vendorName,
         "4": time,
-        "5": `₹${amount}`,
+        "5": amount,
       }),
     });
 
@@ -88,7 +88,9 @@ export const whatsappWebhook = async (
         to: `whatsapp:+917668612989`,
         contentSid:"HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
         //@ts-ignore
-        contentVariables:contentVariables
+        contentVariables:JSON.stringify({
+          "1": rejectionReason
+        })
 
       });
 
