@@ -76,6 +76,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
     const body = req.body;
     const messageWhatsapp = yield messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
+    console.log("ss", req.body);
     try {
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
