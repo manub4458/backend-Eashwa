@@ -31,10 +31,15 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         yield client.messages.create({
             from: "whatsapp:+919911130173",
-            to: `whatsapp:+918791966851`,
+            to: `whatsapp:+918077335703`,
             contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
-            // @ts-ignore
-            contentVariables: contentVariables,
+            contentVariables: JSON.stringify({
+                "1": name,
+                "2": productDescription,
+                "3": vendorName,
+                "4": time,
+                "5": `₹${amount}`,
+            }),
         });
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
@@ -57,7 +62,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+918218698921`,
+                to: `whatsapp:+917668612989`,
                 contentSid: "HXb5947d790365975417f2bcc62852ab88",
             });
             res.status(200).send("<Response></Response>");
@@ -65,7 +70,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
         else if (messageFromAdmin === "reject") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+918791966851`,
+                to: `whatsapp:+918077335703`,
                 contentSid: "HXc4e1cf97fcc0a1434c8154b59aa99b9a",
             });
             res.status(200).send("<Response></Response>");
@@ -77,7 +82,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             contentVariables["1"] = rejectionReason;
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+918218698921`,
+                to: `whatsapp:+917668612989`,
                 contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
                 //@ts-ignore
                 contentVariables: contentVariables
