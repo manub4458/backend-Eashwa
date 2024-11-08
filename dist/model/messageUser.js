@@ -15,5 +15,5 @@ const messageUserSchema = new mongoose_1.Schema({
         required: true,
     },
 });
-const messageUser = (0, mongoose_1.model)('User', messageUserSchema);
+const messageUser = (0, mongoose_1.model)('MessageUser', messageUserSchema);
 exports.default = messageUser;

@@ -23,6 +23,6 @@ const messageUserSchema = new Schema<mUser>({
 })
 
 
-const messageUser = model('User', messageUserSchema);
+const messageUser = model('MessageUser', messageUserSchema);
 
 export default messageUser;
