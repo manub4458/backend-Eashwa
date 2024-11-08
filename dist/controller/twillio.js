@@ -69,7 +69,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
     console.log("Incoming Webhook Body:", req.body);
     console.log("first number", userNumber);
     const body = req.body;
-    const messageWhatsapp = messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
+    const messageWhatsapp = yield messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
     console.log("message user", messageWhatsapp);
     try {
         if (messageFromAdmin === "accept") {

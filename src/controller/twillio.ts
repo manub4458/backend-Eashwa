@@ -76,7 +76,7 @@ export const whatsappWebhook = async (
   console.log("Incoming Webhook Body:", req.body);
   console.log("first number", userNumber);
   const body = req.body;
-  const messageWhatsapp = messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
+  const messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
   console.log("message user", messageWhatsapp);
   try {
     if (messageFromAdmin === "accept") {
