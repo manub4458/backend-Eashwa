@@ -30,7 +30,7 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
-    await client.messages.create({
+    const secondResponse = await client.messages.create({
       from: "whatsapp:+919911130173",
       to: `whatsapp:+917668612989`,
       contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
@@ -49,19 +49,20 @@ export const submitRequest = async (
         {
           $set: {
             messageId: formResposne.sid,
+            secondMessageId:secondResponse.sid,
             name,
           },
         }
       );
-      console.log("whatsapp user updated", updatedUser)
+
     } else {
       const newMessage = new messageUser({
         name,
         messageId: formResposne.sid,
+        secondMessageId:secondResponse.sid,
         whatsappNumber: userPhoneNumber
       });
       await newMessage.save();
-
     }
 
     res.status(200).json({ success: true, message: "Request sent to admin." });
@@ -78,7 +79,10 @@ export const whatsappWebhook = async (
 ): Promise<void> => {
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
   const body = req.body;
-  const messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
+  let messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
+  if(messageWhatsapp===null){
+     messageWhatsapp = await messageUser.findOne({ secondMessageId: body.OriginalRepliedMessageSid });
+  }
   console.log("ss", req.body);
   try {
     if (messageFromAdmin === "accept") {

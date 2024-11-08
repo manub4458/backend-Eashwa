@@ -33,7 +33,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
-        yield client.messages.create({
+        const secondResponse = yield client.messages.create({
             from: "whatsapp:+919911130173",
             to: `whatsapp:+917668612989`,
             contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
@@ -50,15 +50,16 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const updatedUser = yield messageUser_1.default.updateOne({ whatsappNumber: userPhoneNumber }, {
                 $set: {
                     messageId: formResposne.sid,
+                    secondMessageId: secondResponse.sid,
                     name,
                 },
             });
-            console.log("whatsapp user updated", updatedUser);
         }
         else {
             const newMessage = new messageUser_1.default({
                 name,
                 messageId: formResposne.sid,
+                secondMessageId: secondResponse.sid,
                 whatsappNumber: userPhoneNumber
             });
             yield newMessage.save();
@@ -75,7 +76,10 @@ exports.submitRequest = submitRequest;
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
     const body = req.body;
-    const messageWhatsapp = yield messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
+    let messageWhatsapp = yield messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
+    if (messageWhatsapp === null) {
+        messageWhatsapp = yield messageUser_1.default.findOne({ secondMessageId: body.OriginalRepliedMessageSid });
+    }
     console.log("ss", req.body);
     try {
         if (messageFromAdmin === "accept") {

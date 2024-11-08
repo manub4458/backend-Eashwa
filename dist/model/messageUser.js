@@ -10,6 +10,10 @@ const messageUserSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    secondMessageId: {
+        type: String,
+        required: true,
+    },
     whatsappNumber: {
         type: String,
         required: true,
