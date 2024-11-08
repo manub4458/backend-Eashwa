@@ -4,6 +4,7 @@ interface mUser extends Document {
     name: string;
     messageId:string;
     whatsappNumber:string;
+    secondMessageId:string;
   }
 
 const messageUserSchema = new Schema<mUser>({
@@ -15,13 +16,16 @@ const messageUserSchema = new Schema<mUser>({
         type: String,
         required: true,
     },
+    secondMessageId: {
+        type: String,
+        required: true,
+    },
     whatsappNumber: {
         type: String,
         required: true,
     },
 
 })
-
 
 const messageUser = model('MessageUser', messageUserSchema);
 
