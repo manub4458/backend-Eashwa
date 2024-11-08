@@ -36,12 +36,24 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
-        const newMessage = new messageUser_1.default({
-            name,
-            messageId: formResposne.sid,
-            whatsappNumber: userPhoneNumber
-        });
-        yield newMessage.save();
+        const existingUser = yield messageUser_1.default.findOne({ whatsappNumber: userPhoneNumber });
+        if (existingUser) {
+            const updatedUser = yield messageUser_1.default.updateOne({ whatsappNumber: userPhoneNumber }, {
+                $set: {
+                    messageId: formResposne.sid,
+                    name,
+                },
+            });
+            console.log("whatsapp user updated", updatedUser);
+        }
+        else {
+            const newMessage = new messageUser_1.default({
+                name,
+                messageId: formResposne.sid,
+                whatsappNumber: userPhoneNumber
+            });
+            yield newMessage.save();
+        }
         console.log("whatsapp message", formResposne);
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
