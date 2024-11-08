@@ -52,6 +52,7 @@ export const whatsappWebhook = async (
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
   const userPhoneNumber = `${req.body.From}`;
   console.log("Incoming Webhook Body:", req.body);
+  console.log("first number", userNumber);
   try {
     if (messageFromAdmin === "accept") {
       await client.messages.create({
