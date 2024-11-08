@@ -30,6 +30,18 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
+    await client.messages.create({
+      from: "whatsapp:+919911130173",
+      to: `whatsapp:+917668612989`,
+      contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
+      contentVariables: JSON.stringify({
+        "1": name,
+        "2": productDescription,
+        "3": vendorName,
+        "4": time,
+        "5": amount,
+      }),
+    });
     const existingUser = await messageUser.findOne({ whatsappNumber: userPhoneNumber });
     if (existingUser) {
       const updatedUser = await messageUser.updateOne(
@@ -76,12 +88,29 @@ export const whatsappWebhook = async (
         contentSid: "HXb5947d790365975417f2bcc62852ab88",
       });
 
+      if(req.body.From ==="whatsapp:+918077335703"){
+        await client.messages.create({
+          from: "whatsapp:+919911130173",
+          //@ts-ignore
+          to: `whatsapp:+917668612989`,
+          contentSid: "HXb5947d790365975417f2bcc62852ab88",
+        });
+      }else{
+        await client.messages.create({
+          from: "whatsapp:+919911130173",
+          //@ts-ignore
+          to: `whatsapp:+918077335703`,
+          contentSid: "HXb5947d790365975417f2bcc62852ab88",
+        });
+      }
+
+
       res.status(200).send("<Response></Response>");
     }
     else if (messageFromAdmin === "reject") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
-        to: `whatsapp:+918077335703`,
+        to: `${req.body.From}`,
         contentSid: "HXc4e1cf97fcc0a1434c8154b59aa99b9a",
       });
 
@@ -99,8 +128,23 @@ export const whatsappWebhook = async (
         contentVariables: JSON.stringify({
           "1": rejectionReason
         })
-
       });
+
+      if(req.body.From ==="whatsapp:+918077335703"){
+        await client.messages.create({
+          from: "whatsapp:+919911130173",
+          //@ts-ignore
+          to: `whatsapp:+917668612989`,
+          contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+        });
+      }else{
+        await client.messages.create({
+          from: "whatsapp:+919911130173",
+          //@ts-ignore
+          to: `whatsapp:+918077335703`,
+          contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+        });
+      }
 
       res.status(200).send("<Response></Response>");
     } else {
