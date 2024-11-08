@@ -82,7 +82,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             });
             res.status(200).send("<Response></Response>");
         }
-        else if (messageFromAdmin.startsWith("reject reason:")) {
+        else if (messageFromAdmin.startsWith("reason:")) {
             const rejectionReason = messageFromAdmin
                 .replace(/^reject reason:\s*/i, "")
                 .trim();
