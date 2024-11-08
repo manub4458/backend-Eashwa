@@ -16,6 +16,7 @@ exports.whatsappWebhook = exports.submitRequest = void 0;
 const twilio_1 = __importDefault(require("twilio"));
 const emailer_1 = require("../utils/emailer");
 const dotenv_1 = __importDefault(require("dotenv"));
+const messageUser_1 = __importDefault(require("../model/messageUser"));
 dotenv_1.default.config();
 const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 var userNumber = "000000";
@@ -35,7 +36,12 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
-        userNumber = userPhoneNumber;
+        const newMessage = new messageUser_1.default({
+            name,
+            messageId: formResposne.sid,
+            whatsappNumber: userPhoneNumber
+        });
+        yield newMessage.save();
         console.log("whatsapp message", formResposne);
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
@@ -48,14 +54,17 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.submitRequest = submitRequest;
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
-    const userPhoneNumber = `${req.body.From}`;
     console.log("Incoming Webhook Body:", req.body);
     console.log("first number", userNumber);
+    const body = req.body;
+    const messageWhatsapp = messageUser_1.default.findOne({ messageId: body.OriginalRepliedMessageSid });
+    console.log("message user", messageWhatsapp);
     try {
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:${userNumber}`,
+                //@ts-ignore
+                to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
                 contentSid: "HXb5947d790365975417f2bcc62852ab88",
             });
             res.status(200).send("<Response></Response>");
@@ -74,7 +83,8 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 .trim();
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `${userPhoneNumber}`,
+                //@ts-ignore
+                to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
                 contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
                 contentVariables: JSON.stringify({
                     "1": rejectionReason
