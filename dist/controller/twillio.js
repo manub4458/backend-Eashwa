@@ -18,6 +18,7 @@ const emailer_1 = require("../utils/emailer");
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+var userNumber = "000000";
 const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, productDescription, vendorName, userPhoneNumber, amount } = req.body;
     const time = (0, emailer_1.getFormattedDate)();
@@ -34,6 +35,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
+        userNumber = userPhoneNumber;
         console.log("whatsapp message", formResposne);
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
@@ -52,7 +54,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `${userPhoneNumber}`,
+                to: `whatsapp:${userNumber}`,
                 contentSid: "HXb5947d790365975417f2bcc62852ab88",
             });
             res.status(200).send("<Response></Response>");

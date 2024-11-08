@@ -10,6 +10,8 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+var userNumber = "000000";
+
 export const submitRequest = async (
   req: Request,
   res: Response
@@ -31,6 +33,7 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
+    userNumber =  userPhoneNumber;
 
     console.log("whatsapp message", formResposne);
 
@@ -53,7 +56,7 @@ export const whatsappWebhook = async (
     if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
-          to: `${userPhoneNumber}`,
+          to: `whatsapp:${userNumber}`,
         contentSid:"HXb5947d790365975417f2bcc62852ab88",
       });
 
