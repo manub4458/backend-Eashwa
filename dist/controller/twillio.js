@@ -33,6 +33,18 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
+        yield client.messages.create({
+            from: "whatsapp:+919911130173",
+            to: `whatsapp:+917668612989`,
+            contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
+            contentVariables: JSON.stringify({
+                "1": name,
+                "2": productDescription,
+                "3": vendorName,
+                "4": time,
+                "5": amount,
+            }),
+        });
         const existingUser = yield messageUser_1.default.findOne({ whatsappNumber: userPhoneNumber });
         if (existingUser) {
             const updatedUser = yield messageUser_1.default.updateOne({ whatsappNumber: userPhoneNumber }, {
@@ -72,12 +84,28 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
                 contentSid: "HXb5947d790365975417f2bcc62852ab88",
             });
+            if (req.body.From === "whatsapp:+918077335703") {
+                yield client.messages.create({
+                    from: "whatsapp:+919911130173",
+                    //@ts-ignore
+                    to: `whatsapp:+917668612989`,
+                    contentSid: "HXb5947d790365975417f2bcc62852ab88",
+                });
+            }
+            else {
+                yield client.messages.create({
+                    from: "whatsapp:+919911130173",
+                    //@ts-ignore
+                    to: `whatsapp:+918077335703`,
+                    contentSid: "HXb5947d790365975417f2bcc62852ab88",
+                });
+            }
             res.status(200).send("<Response></Response>");
         }
         else if (messageFromAdmin === "reject") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
-                to: `whatsapp:+918077335703`,
+                to: `${req.body.From}`,
                 contentSid: "HXc4e1cf97fcc0a1434c8154b59aa99b9a",
             });
             res.status(200).send("<Response></Response>");
@@ -95,6 +123,22 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     "1": rejectionReason
                 })
             });
+            if (req.body.From === "whatsapp:+918077335703") {
+                yield client.messages.create({
+                    from: "whatsapp:+919911130173",
+                    //@ts-ignore
+                    to: `whatsapp:+917668612989`,
+                    contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+                });
+            }
+            else {
+                yield client.messages.create({
+                    from: "whatsapp:+919911130173",
+                    //@ts-ignore
+                    to: `whatsapp:+918077335703`,
+                    contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+                });
+            }
             res.status(200).send("<Response></Response>");
         }
         else {
