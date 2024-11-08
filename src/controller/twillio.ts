@@ -17,16 +17,9 @@ export const submitRequest = async (
   const { name, productDescription, vendorName, userPhoneNumber, amount } =
     req.body;
   const time = getFormattedDate();
-  const contentVariables: { [key: string]: string } = {
-    "1": name,
-    "2": productDescription,
-    "3": vendorName,
-    "4": time,
-    "5": `₹${amount}`,
-  };
 
   try {
-    await client.messages.create({
+   const formResposne =  await client.messages.create({
       from: "whatsapp:+919911130173",
       to: `whatsapp:+918077335703`,
       contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
@@ -38,6 +31,8 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
+
+    console.log("whatsapp message", formResposne);
 
     res.status(200).json({ success: true, message: "Request sent to admin." });
   } catch (error) {

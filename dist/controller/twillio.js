@@ -21,15 +21,8 @@ const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env
 const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, productDescription, vendorName, userPhoneNumber, amount } = req.body;
     const time = (0, emailer_1.getFormattedDate)();
-    const contentVariables = {
-        "1": name,
-        "2": productDescription,
-        "3": vendorName,
-        "4": time,
-        "5": `₹${amount}`,
-    };
     try {
-        yield client.messages.create({
+        const formResposne = yield client.messages.create({
             from: "whatsapp:+919911130173",
             to: `whatsapp:+918077335703`,
             contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
@@ -41,6 +34,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 "5": amount,
             }),
         });
+        console.log("whatsapp message", formResposne);
         res.status(200).json({ success: true, message: "Request sent to admin." });
     }
     catch (error) {
