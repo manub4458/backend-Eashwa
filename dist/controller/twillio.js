@@ -84,7 +84,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
         }
         else if (messageFromAdmin.startsWith("reason:")) {
             const rejectionReason = messageFromAdmin
-                .replace(/^reject reason:\s*/i, "")
+                .replace(/^reason:\s*/i, "")
                 .trim();
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
