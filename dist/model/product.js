@@ -40,14 +40,23 @@ const productSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    partyName: {
+        type: String, // Added party name as an optional field
+    },
+    location: {
+        type: String, // Added location as an optional field
+    },
     stockHistory: [{
             date: { type: Date, default: Date.now },
             user: { type: String, required: true },
             quantity: { type: Number, required: true },
             speci: { type: String, required: true },
             action: { type: String, enum: ['added', 'sold'], required: true },
+            partyName: { type: String, required: true }, // Added party name to stock history
+            location: { type: String, required: true }, // Added location to stock history
         }],
 });
+// Middleware to update the lastUpdated field before saving
 productSchema.pre('save', function (next) {
     this.lastUpdated = new Date();
     next();
