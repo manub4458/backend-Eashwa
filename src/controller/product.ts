@@ -72,6 +72,8 @@ const addSoldStock = async (updates: {
         product.soldStock = currentSoldStock + quantityToAdd;
         product.updatedBy = updatedBy;
         product.specification = specification;
+        product.partyName = partyName; // Update product with party name if available
+        product.location = location; // Update product with location if available
 
         product.stockHistory.push({
             user: updatedBy,
@@ -92,8 +94,15 @@ const addSoldStock = async (updates: {
 
  
 export const createProductHandler = async (req: Request, res: Response) => {
-    const { type, item, currentStock, soldStock, updatedBy, specification } = req.body;
- 
+    // Destructure values from the request body
+    const { type, item, currentStock, soldStock, updatedBy, specification, partyName, location } = req.body;
+
+    // Ensure both partyName and location are provided since they are marked as required
+    if (!partyName || !location) {
+        return res.status(400).json({ message: 'Party name and location are required.' });
+    }
+
+    // Create a new product instance
     const newProduct = new Product({
         type,
         item,
@@ -101,15 +110,19 @@ export const createProductHandler = async (req: Request, res: Response) => {
         soldStock,
         updatedBy,
         specification,
+        partyName,    // Added partyName to the product creation
+        location,     // Added location to the product creation
     });
- 
+
     try {
+        // Save the new product to the database
         const savedProduct = await newProduct.save();
         res.status(201).json({
             message: `Product ${savedProduct.item} added successfully.`,
             product: savedProduct,
         });
     } catch (error) {
+        // Handle errors during save operation
         res.status(400).json({ message: (error as Error).message });
     }
 };
