@@ -2,62 +2,93 @@ import { Request, Response } from "express";
 import Product from "../model/product";
  
  
-const addStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string, specification: string}[]) => {
+const addStock = async (updates: { 
+    type: string; 
+    item: string; 
+    quantity: number; 
+    updatedBy: string; 
+    specification: string;
+    partyName?: string; // New optional field for party name
+    location?: string; // New optional field for location
+}[]) => {
     const updatedProducts: any[] = [];
  
-    for (const { type, item, quantity, updatedBy, specification } of updates) {
+    for (const { type, item, quantity, updatedBy, specification, partyName, location } of updates) {
         const product = await Product.findOne({ type, item });
+        
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
+
         const currentStock = Number(product.currentStock);
         const quantityToAdd = Number(quantity);
- 
+
+        // Update the product stock and other fields
         product.currentStock = currentStock + quantityToAdd;
         product.updatedBy = updatedBy;
         product.specification = specification;
+        product.partyName = partyName; // Update product with party name if available
+        product.location = location; // Update product with location if available
+
+        // Add to stock history with partyName and location
         product.stockHistory.push({
             user: updatedBy,
             quantity,
             action: 'added',
             date: new Date(),
-            speci:specification
+            speci: specification,
+            partyName, // Store party name in history
+            location, // Store location in history
         });
+
         await product.save();
         updatedProducts.push(product);
     }
- 
+
     return updatedProducts;
 };
+
  
-const addSoldStock = async (updates: { type: string; item: string; quantity: number; updatedBy: string, specification: string }[]) => {
+const addSoldStock = async (updates: { 
+    type: string; 
+    item: string; 
+    quantity: number; 
+    updatedBy: string; 
+    specification: string;
+    partyName?: string; // Make partyName optional if it may not always be provided
+    location?: string;   // Make location optional if it may not always be provided
+}[]) => {
     const updatedProducts: any[] = [];
  
-    for (const { type, item, quantity, updatedBy, specification } of updates) {
+    for (const { type, item, quantity, updatedBy, specification, partyName, location } of updates) {
         const product = await Product.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
-        console.log(specification);
+
         const currentSoldStock = Number(product.soldStock);
         const quantityToAdd = Number(quantity);
-        product.soldStock =  currentSoldStock + quantityToAdd;
+        product.soldStock = currentSoldStock + quantityToAdd;
         product.updatedBy = updatedBy;
         product.specification = specification;
+
         product.stockHistory.push({
             user: updatedBy,
             speci: specification,
             quantity,
             action: 'sold',
             date: new Date(),
-
+            partyName: partyName || '-', // Use a default if partyName is not provided
+            location: location || '-'    // Use a default if location is not provided
         });
+
         await product.save();
         updatedProducts.push(product);
     }
  
     return updatedProducts;
 };
+
  
 export const createProductHandler = async (req: Request, res: Response) => {
     const { type, item, currentStock, soldStock, updatedBy, specification } = req.body;
@@ -94,6 +125,7 @@ export const addStockHandler = async (req: Request, res: Response) => {
         res.status(400).json({ message: (error as Error).message });
     }
 };
+
  
 export const addSoldStockHandler = async (req: Request, res: Response) => {
     const { updates } = req.body; 
@@ -185,23 +217,17 @@ export const getVehiclesStock = async (req: Request, res: Response) => {
 export const getStockHistory = async (req: Request, res: Response) => {
     const { type } = req.params;
 
-    // Ensure the type is one of the allowed product types: 'battery', 'charger', or 'vehicle'
     if (!['battery', 'charger', 'vehicle'].includes(type.toLowerCase())) {
         return res.status(400).json({ message: "Invalid type. Use 'battery', 'charger', or 'vehicle'." });
     }
 
-    // Capitalize the first letter of the product type to match the model naming convention
     const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
-
-    // Fetch products based on the type
     const products = await Product.find({ type: formattedType });
 
-    // If no products found, return a 404 response
     if (products.length === 0) {
         return res.status(404).json({ message: `No ${type}s found.` });
     }
 
-    // Map over the products and flatten the stock history
     const history = products.flatMap(product =>
         product.stockHistory.map(entry => ({
             item: product.item,
@@ -209,7 +235,9 @@ export const getStockHistory = async (req: Request, res: Response) => {
             quantity: entry.quantity,
             user: entry.user,
             date: entry.date,
-            specification: entry.speci ? entry.speci : '-' // Ensure specification is included
+            specification: entry.speci || '-',
+            partyName: entry.partyName || '-', // include party name
+            location: entry.location || '-' // include location
         }))
     );
 
