@@ -16,22 +16,28 @@ exports.getStockHistory = exports.getVehiclesStock = exports.getChargersStock = 
 const product_1 = __importDefault(require("../model/product"));
 const addStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedProducts = [];
-    for (const { type, item, quantity, updatedBy, specification } of updates) {
+    for (const { type, item, quantity, updatedBy, specification, partyName, location } of updates) {
         const product = yield product_1.default.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
         const currentStock = Number(product.currentStock);
         const quantityToAdd = Number(quantity);
+        // Update the product stock and other fields
         product.currentStock = currentStock + quantityToAdd;
         product.updatedBy = updatedBy;
         product.specification = specification;
+        product.partyName = partyName; // Update product with party name if available
+        product.location = location; // Update product with location if available
+        // Add to stock history with partyName and location
         product.stockHistory.push({
             user: updatedBy,
             quantity,
             action: 'added',
             date: new Date(),
-            speci: specification
+            speci: specification,
+            partyName, // Store party name in history
+            location, // Store location in history
         });
         yield product.save();
         updatedProducts.push(product);
@@ -40,23 +46,26 @@ const addStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
 });
 const addSoldStock = (updates) => __awaiter(void 0, void 0, void 0, function* () {
     const updatedProducts = [];
-    for (const { type, item, quantity, updatedBy, specification } of updates) {
+    for (const { type, item, quantity, updatedBy, specification, partyName, location } of updates) {
         const product = yield product_1.default.findOne({ type, item });
         if (!product) {
             throw new Error(`Product ${item} not found`);
         }
-        console.log(specification);
         const currentSoldStock = Number(product.soldStock);
         const quantityToAdd = Number(quantity);
         product.soldStock = currentSoldStock + quantityToAdd;
         product.updatedBy = updatedBy;
         product.specification = specification;
+        product.partyName = partyName; // Update product with party name if available
+        product.location = location; // Update product with location if available
         product.stockHistory.push({
             user: updatedBy,
             speci: specification,
             quantity,
             action: 'sold',
             date: new Date(),
+            partyName: partyName || '-', // Use a default if partyName is not provided
+            location: location || '-' // Use a default if location is not provided
         });
         yield product.save();
         updatedProducts.push(product);
@@ -64,7 +73,13 @@ const addSoldStock = (updates) => __awaiter(void 0, void 0, void 0, function* ()
     return updatedProducts;
 });
 const createProductHandler = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { type, item, currentStock, soldStock, updatedBy, specification } = req.body;
+    // Destructure values from the request body
+    const { type, item, currentStock, soldStock, updatedBy, specification, partyName, location } = req.body;
+    // Ensure both partyName and location are provided since they are marked as required
+    if (!partyName || !location) {
+        return res.status(400).json({ message: 'Party name and location are required.' });
+    }
+    // Create a new product instance
     const newProduct = new product_1.default({
         type,
         item,
@@ -72,8 +87,11 @@ const createProductHandler = (req, res) => __awaiter(void 0, void 0, void 0, fun
         soldStock,
         updatedBy,
         specification,
+        partyName, // Added partyName to the product creation
+        location, // Added location to the product creation
     });
     try {
+        // Save the new product to the database
         const savedProduct = yield newProduct.save();
         res.status(201).json({
             message: `Product ${savedProduct.item} added successfully.`,
@@ -81,6 +99,7 @@ const createProductHandler = (req, res) => __awaiter(void 0, void 0, void 0, fun
         });
     }
     catch (error) {
+        // Handle errors during save operation
         res.status(400).json({ message: error.message });
     }
 });
@@ -125,6 +144,8 @@ const getBatteriesStock = (req, res) => __awaiter(void 0, void 0, void 0, functi
             remainingStock: battery.currentStock - battery.soldStock,
             lastUpdated: battery.lastUpdated,
             updatedBy: battery.updatedBy,
+            partyName: battery.partyName || '-', // Include partyName
+            location: battery.location || '-', // Include location
         }));
         res.json({
             message: "Battery retrieved successfully.",
@@ -147,7 +168,9 @@ const getChargersStock = (req, res) => __awaiter(void 0, void 0, void 0, functio
             soldStock: charger.soldStock,
             remainingStock: charger.currentStock - charger.soldStock,
             lastUpdated: charger.lastUpdated,
-            updatedBy: charger.updatedBy
+            updatedBy: charger.updatedBy,
+            partyName: charger.partyName || '-', // Include partyName
+            location: charger.location || '-', // Include location
         }));
         res.json({
             message: "Charger retrieved successfully.",
@@ -171,7 +194,8 @@ const getVehiclesStock = (req, res) => __awaiter(void 0, void 0, void 0, functio
             remainingStock: vehicle.currentStock - vehicle.soldStock,
             lastUpdated: vehicle.lastUpdated,
             updatedBy: vehicle.updatedBy,
-            // specifications: vehicle.specifications,
+            partyName: vehicle.partyName || '-', // Include partyName
+            location: vehicle.location || '-', // Include location
         }));
         res.json({
             message: "Vehicle stock retrieved successfully.",
@@ -185,26 +209,23 @@ const getVehiclesStock = (req, res) => __awaiter(void 0, void 0, void 0, functio
 exports.getVehiclesStock = getVehiclesStock;
 const getStockHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { type } = req.params;
-    // Ensure the type is one of the allowed product types: 'battery', 'charger', or 'vehicle'
     if (!['battery', 'charger', 'vehicle'].includes(type.toLowerCase())) {
         return res.status(400).json({ message: "Invalid type. Use 'battery', 'charger', or 'vehicle'." });
     }
-    // Capitalize the first letter of the product type to match the model naming convention
     const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
-    // Fetch products based on the type
     const products = yield product_1.default.find({ type: formattedType });
-    // If no products found, return a 404 response
     if (products.length === 0) {
         return res.status(404).json({ message: `No ${type}s found.` });
     }
-    // Map over the products and flatten the stock history
     const history = products.flatMap(product => product.stockHistory.map(entry => ({
         item: product.item,
         action: entry.action,
         quantity: entry.quantity,
         user: entry.user,
         date: entry.date,
-        specification: entry.speci ? entry.speci : '-' // Ensure specification is included
+        specification: entry.speci || '-',
+        partyName: entry.partyName || '-', // include partyName
+        location: entry.location || '-', // include location
     })));
     res.json({
         message: `${formattedType} stock history retrieved successfully.`,
