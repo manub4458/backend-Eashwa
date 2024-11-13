@@ -87,8 +87,6 @@ const createProductHandler = (req, res) => __awaiter(void 0, void 0, void 0, fun
         soldStock,
         updatedBy,
         specification,
-        partyName, // Added partyName to the product creation
-        location, // Added location to the product creation
     });
     try {
         // Save the new product to the database

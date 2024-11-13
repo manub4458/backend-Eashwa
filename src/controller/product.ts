@@ -110,8 +110,7 @@ export const createProductHandler = async (req: Request, res: Response) => {
         soldStock,
         updatedBy,
         specification,
-        partyName,    // Added partyName to the product creation
-        location,     // Added location to the product creation
+   
     });
 
     try {
