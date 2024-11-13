@@ -52,8 +52,8 @@ const productSchema = new mongoose_1.Schema({
             quantity: { type: Number, required: true },
             speci: { type: String, required: true },
             action: { type: String, enum: ['added', 'sold'], required: true },
-            partyName: { type: String, required: true }, // Added party name to stock history
-            location: { type: String, required: true }, // Added location to stock history
+            partyName: { type: String }, // Added party name to stock history
+            location: { type: String }, // Added location to stock history
         }],
 });
 // Middleware to update the lastUpdated field before saving
