@@ -48,7 +48,8 @@ const addStock = async (updates: {
     return updatedProducts;
 };
 
- 
+
+
 const addSoldStock = async (updates: { 
     type: string; 
     item: string; 
