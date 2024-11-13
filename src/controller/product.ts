@@ -8,8 +8,8 @@ const addStock = async (updates: {
     quantity: number; 
     updatedBy: string; 
     specification: string;
-    partyName?: string; // New optional field for party name
-    location?: string; // New optional field for location
+    partyName: string; // New optional field for party name
+    location: string; // New optional field for location
 }[]) => {
     const updatedProducts: any[] = [];
  
@@ -55,8 +55,8 @@ const addSoldStock = async (updates: {
     quantity: number; 
     updatedBy: string; 
     specification: string;
-    partyName?: string; // Make partyName optional if it may not always be provided
-    location?: string;   // Make location optional if it may not always be provided
+    partyName: string; // Make partyName optional if it may not always be provided
+    location: string;   // Make location optional if it may not always be provided
 }[]) => {
     const updatedProducts: any[] = [];
  
@@ -144,7 +144,7 @@ export const addSoldStockHandler = async (req: Request, res: Response) => {
 export const getBatteriesStock = async (req: Request, res: Response) => {
     try {
         const batteries = await Product.find({ type: 'Battery' });
- 
+
         const response = batteries.map(battery => ({
             id: battery._id,
             type: battery.type,
@@ -154,8 +154,10 @@ export const getBatteriesStock = async (req: Request, res: Response) => {
             remainingStock: battery.currentStock - battery.soldStock,
             lastUpdated: battery.lastUpdated,
             updatedBy: battery.updatedBy,
+            partyName: battery.partyName || '-', // Include partyName
+            location: battery.location || '-', // Include location
         }));
- 
+
         res.json({
             message: "Battery retrieved successfully.",
             products: response,
@@ -168,18 +170,20 @@ export const getBatteriesStock = async (req: Request, res: Response) => {
 export const getChargersStock = async (req: Request, res: Response) => {
     try {
         const chargers = await Product.find({ type: 'Charger' });
- 
+
         const response = chargers.map(charger => ({
             id: charger._id,
             type: charger.type,
             item: charger.item,
             currentStock: charger.currentStock,
             soldStock: charger.soldStock,
-            remainingStock: charger.currentStock - charger.soldStock, 
+            remainingStock: charger.currentStock - charger.soldStock,
             lastUpdated: charger.lastUpdated,
-            updatedBy: charger.updatedBy
+            updatedBy: charger.updatedBy,
+            partyName: charger.partyName || '-', // Include partyName
+            location: charger.location || '-', // Include location
         }));
- 
+
         res.json({
             message: "Charger retrieved successfully.",
             products: response,
@@ -188,6 +192,7 @@ export const getChargersStock = async (req: Request, res: Response) => {
         res.status(500).json({ message: (error as Error).message });
     }
 };
+
 
 export const getVehiclesStock = async (req: Request, res: Response) => {
     try {
@@ -202,7 +207,8 @@ export const getVehiclesStock = async (req: Request, res: Response) => {
             remainingStock: vehicle.currentStock - vehicle.soldStock,
             lastUpdated: vehicle.lastUpdated,
             updatedBy: vehicle.updatedBy,
-            // specifications: vehicle.specifications,
+            partyName: vehicle.partyName || '-', // Include partyName
+            location: vehicle.location || '-', // Include location
         }));
 
         res.json({
@@ -236,8 +242,8 @@ export const getStockHistory = async (req: Request, res: Response) => {
             user: entry.user,
             date: entry.date,
             specification: entry.speci || '-',
-            partyName: entry.partyName || '-', // include party name
-            location: entry.location || '-' // include location
+            partyName: entry.partyName || '-', // include partyName
+            location: entry.location || '-', // include location
         }))
     );
 
@@ -246,3 +252,4 @@ export const getStockHistory = async (req: Request, res: Response) => {
         history,
     });
 };
+
