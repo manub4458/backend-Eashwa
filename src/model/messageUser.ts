@@ -5,6 +5,10 @@ interface mUser extends Document {
     messageId:string;
     whatsappNumber:string;
     secondMessageId:string;
+    productDescription:string;
+    vendorName:string;
+    amount:number;
+    time:string;
   }
 
 const messageUserSchema = new Schema<mUser>({
@@ -16,11 +20,27 @@ const messageUserSchema = new Schema<mUser>({
         type: String,
         required: true,
     },
+    productDescription: {
+        type: String,
+        required: true,
+    },
+    vendorName: {
+        type: String,
+        required: true,
+    },
+    amount: {
+        type: Number,
+        required: true,
+    },
     secondMessageId: {
         type: String,
         required: true,
     },
     whatsappNumber: {
+        type: String,
+        required: true,
+    },
+    time: {
         type: String,
         required: true,
     },
