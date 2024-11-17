@@ -110,7 +110,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     //@ts-ignore
                     "4": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.time,
                     //@ts-ignore
-                    "5": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.amount,
+                    "5": `₹${messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.amount}`,
                 })
             });
             if (req.body.From === "whatsapp:+918077335703") {
