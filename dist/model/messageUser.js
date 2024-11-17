@@ -19,7 +19,7 @@ const messageUserSchema = new mongoose_1.Schema({
         required: true,
     },
     amount: {
-        type: Number,
+        type: String,
         required: true,
     },
     secondMessageId: {
