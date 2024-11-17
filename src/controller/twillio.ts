@@ -51,6 +51,10 @@ export const submitRequest = async (
             messageId: formResposne.sid,
             secondMessageId:secondResponse.sid,
             name,
+            productDescription,
+            vendorName, 
+            amount,
+            time
           },
         }
       );
@@ -60,7 +64,11 @@ export const submitRequest = async (
         name,
         messageId: formResposne.sid,
         secondMessageId:secondResponse.sid,
-        whatsappNumber: userPhoneNumber
+        whatsappNumber: userPhoneNumber,
+        productDescription,
+        vendorName, 
+        amount,
+        time
       });
       await newMessage.save();
     }

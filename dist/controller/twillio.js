@@ -52,6 +52,10 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     messageId: formResposne.sid,
                     secondMessageId: secondResponse.sid,
                     name,
+                    productDescription,
+                    vendorName,
+                    amount,
+                    time
                 },
             });
         }
@@ -60,7 +64,11 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                 name,
                 messageId: formResposne.sid,
                 secondMessageId: secondResponse.sid,
-                whatsappNumber: userPhoneNumber
+                whatsappNumber: userPhoneNumber,
+                productDescription,
+                vendorName,
+                amount,
+                time
             });
             yield newMessage.save();
         }
