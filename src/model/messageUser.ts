@@ -7,7 +7,7 @@ interface mUser extends Document {
     secondMessageId:string;
     productDescription:string;
     vendorName:string;
-    amount:number;
+    amount:string;
     time:string;
   }
 
@@ -29,7 +29,7 @@ const messageUserSchema = new Schema<mUser>({
         required: true,
     },
     amount: {
-        type: Number,
+        type: String,
         required: true,
     },
     secondMessageId: {
