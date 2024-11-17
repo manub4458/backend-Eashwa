@@ -114,7 +114,7 @@ export const whatsappWebhook = async (
           //@ts-ignore
           "4": messageWhatsapp?.time,
           //@ts-ignore
-          "5": messageWhatsapp?.amount,
+          "5": `₹${messageWhatsapp?.amount}`,
         })
       });
 
