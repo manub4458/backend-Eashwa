@@ -103,7 +103,7 @@ export const whatsappWebhook = async (
       await client.messages.create({
         from: "whatsapp:+919911130173",
         //@ts-ignore
-        to: `whatsapp:+918791966851`,
+        to: `whatsapp:+919411654217`,
         contentSid: "HXc92a36fb628d717d8505d7c6a9669781",
         contentVariables: JSON.stringify({
           "1": messageWhatsapp?.name,
