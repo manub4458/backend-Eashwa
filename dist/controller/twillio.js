@@ -23,7 +23,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const formResposne = yield client.messages.create({
             from: "whatsapp:+919911130173",
-            to: `whatsapp:+919990148011`,
+            to: `whatsapp:+918077335703`,
             contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
             contentVariables: JSON.stringify({
                 "1": name,
@@ -35,7 +35,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         const secondResponse = yield client.messages.create({
             from: "whatsapp:+919911130173",
-            to: `whatsapp:+917723866666`,
+            to: `whatsapp:+917668612989`,
             contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
             contentVariables: JSON.stringify({
                 "1": name,
@@ -99,7 +99,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
                 //@ts-ignore
-                to: `whatsapp:+919411654217`,
+                to: `whatsapp:+918979456475`,
                 contentSid: "HXc92a36fb628d717d8505d7c6a9669781",
                 contentVariables: JSON.stringify({
                     "1": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.name,
@@ -113,19 +113,19 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     "5": `₹${messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.amount}`,
                 })
             });
-            if (req.body.From === "whatsapp:+919990148011") {
+            if (req.body.From === "whatsapp:+918077335703") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
-                    to: `whatsapp:+917723866666`,
+                    to: `whatsapp:+917668612989`,
                     contentSid: "HXb5947d790365975417f2bcc62852ab88",
                 });
             }
-            else if (req.body.From === "whatsapp:+917723866666") {
+            else if (req.body.From === "whatsapp:+917668612989") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
-                    to: `whatsapp:+919990148011`,
+                    to: `whatsapp:+918077335703`,
                     contentSid: "HXb5947d790365975417f2bcc62852ab88",
                 });
             }
@@ -152,22 +152,22 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                     "1": rejectionReason
                 })
             });
-            if (req.body.From === "whatsapp:+919990148011") {
+            if (req.body.From === "whatsapp:+918077335703") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
-                    to: `whatsapp:+917723866666`,
+                    to: `whatsapp:+917668612989`,
                     contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
                     contentVariables: JSON.stringify({
                         "1": rejectionReason
                     })
                 });
             }
-            else if (req.body.From === "whatsapp:+917723866666") {
+            else if (req.body.From === "whatsapp:+917668612989") {
                 yield client.messages.create({
                     from: "whatsapp:+919911130173",
                     //@ts-ignore
-                    to: `whatsapp:+919990148011`,
+                    to: `whatsapp:+918077335703`,
                     contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
                     contentVariables: JSON.stringify({
                         "1": rejectionReason
