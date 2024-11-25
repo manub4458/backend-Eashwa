@@ -21,6 +21,7 @@ const db = require("./config/db");
 const user_1 = __importDefault(require("./routes/user"));
 const product_1 = __importDefault(require("./routes/product"));
 const twillio_1 = __importDefault(require("./routes/twillio"));
+const morgan_1 = __importDefault(require("morgan"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 8000;
@@ -31,6 +32,7 @@ var corsOptions = {
 app.use((0, cors_1.default)(corsOptions));
 app.use(body_parser_1.default.urlencoded({ extended: false }));
 app.use(body_parser_1.default.json());
+app.use((0, morgan_1.default)("dev"));
 app.use((0, cookie_parser_1.default)());
 app.use('/api/user', user_1.default);
 app.use('/api/products', product_1.default);

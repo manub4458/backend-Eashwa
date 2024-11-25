@@ -7,6 +7,7 @@ import db = require('./config/db');
 import userRoutes from "./routes/user";
 import productRoutes from "./routes/product";
 import requestRouter from "./routes/twillio";
+import morgan from "morgan"
 declare global {
     namespace Express {
       interface Request {
@@ -28,6 +29,7 @@ var corsOptions = {
 app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(morgan("dev"));
 app.use(cookieParser());
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
