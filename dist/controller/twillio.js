@@ -94,7 +94,18 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 from: "whatsapp:+919911130173",
                 //@ts-ignore
                 to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
-                contentSid: "HXb5947d790365975417f2bcc62852ab88",
+                contentSid: "HXbe4efbaa7e6a1bcfba85cfa3f3ec73b2",
+                contentVariables: JSON.stringify({
+                    "1": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.name,
+                    //@ts-ignore
+                    "2": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.productDescription,
+                    //@ts-ignore
+                    "3": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.vendorName,
+                    //@ts-ignore
+                    "4": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.time,
+                    //@ts-ignore
+                    "5": `₹${messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.amount}`,
+                })
             });
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
