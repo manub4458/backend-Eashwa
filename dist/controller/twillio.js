@@ -94,7 +94,7 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 from: "whatsapp:+919911130173",
                 //@ts-ignore
                 to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
-                contentSid: "HXbe4efbaa7e6a1bcfba85cfa3f3ec73b2",
+                contentSid: "HXf2dd29e93e8f5588d14f3a1c75fc5391",
                 contentVariables: JSON.stringify({
                     "1": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.name,
                     //@ts-ignore
@@ -158,9 +158,18 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 from: "whatsapp:+919911130173",
                 //@ts-ignore
                 to: `whatsapp:${messageWhatsapp.whatsappNumber}`,
-                contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
+                contentSid: "HX1d9067b37433fd2e8b5b8af4a2a09e12",
                 contentVariables: JSON.stringify({
-                    "1": rejectionReason
+                    "1": rejectionReason,
+                    "2": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.name,
+                    //@ts-ignore
+                    "3": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.productDescription,
+                    //@ts-ignore
+                    "4": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.vendorName,
+                    //@ts-ignore
+                    "5": messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.time,
+                    //@ts-ignore
+                    "6": `₹${messageWhatsapp === null || messageWhatsapp === void 0 ? void 0 : messageWhatsapp.amount}`,
                 })
             });
             if (req.body.From === "whatsapp:+918077335703") {
