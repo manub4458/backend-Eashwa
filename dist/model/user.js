@@ -31,12 +31,44 @@ const userSchema = new mongoose_1.Schema({
     },
     tokenExpire: {
         type: Date,
-        default: null
+        default: null,
     },
     isVerified: {
         type: Boolean,
         default: false,
-    }
+    },
+    address: {
+        type: String,
+        default: '',
+    },
+    aadhaarNumber: {
+        type: Number,
+        default: null,
+    },
+    role: {
+        type: String,
+        default: 'user',
+    },
+    employeeId: {
+        type: String,
+        default: '',
+    },
+    phone: {
+        type: Number,
+        default: null,
+    },
+    joiningDate: {
+        type: String,
+        default: '',
+    },
+    targetAchieved: {
+        type: String,
+        default: '',
+    },
+    profilePicture: {
+        type: String,
+        default: '',
+    },
 });
 userSchema.pre('save', function (next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -45,8 +77,12 @@ userSchema.pre('save', function (next) {
             return next();
         }
         const salt = (0, bcrypt_1.genSaltSync)(10);
-        user.password = (0, bcrypt_1.hashSync)(user.password, salt);
-        user.passwordResetToken = (0, bcrypt_1.hashSync)(user.passwordResetToken, salt);
+        if (user.isModified('password')) {
+            user.password = (0, bcrypt_1.hashSync)(user.password, salt);
+        }
+        if (user.isModified('passwordResetToken')) {
+            user.passwordResetToken = (0, bcrypt_1.hashSync)(user.passwordResetToken, salt);
+        }
         next();
     });
 });
