@@ -7,6 +7,7 @@ import db = require('./config/db');
 import userRoutes from "./routes/user";
 import productRoutes from "./routes/product";
 import requestRouter from "./routes/twillio";
+import imageRouter from "./routes/image";
 import morgan from "morgan"
 declare global {
     namespace Express {
@@ -34,6 +35,7 @@ app.use(cookieParser());
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/request', requestRouter);
+app.use('/api/images', imageRouter);
 app.use((err: Error, req: Request, res:Response, next: NextFunction) => {
     res.status(500).json({message: err.message});  
   });

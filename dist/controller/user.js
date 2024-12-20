@@ -20,7 +20,7 @@ const otplib_1 = require("otplib");
 const emailer_1 = require("../utils/emailer");
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture } = req.body;
         const expression = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
         const pass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
         if (!pass.test(password.toString())) {
@@ -39,6 +39,7 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             name,
             email,
             password,
+            address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture
         });
         yield newUser.save();
         res.status(200).json({ message: "registered successfully" });

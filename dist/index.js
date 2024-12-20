@@ -21,6 +21,7 @@ const db = require("./config/db");
 const user_1 = __importDefault(require("./routes/user"));
 const product_1 = __importDefault(require("./routes/product"));
 const twillio_1 = __importDefault(require("./routes/twillio"));
+const image_1 = __importDefault(require("./routes/image"));
 const morgan_1 = __importDefault(require("morgan"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -37,6 +38,7 @@ app.use((0, cookie_parser_1.default)());
 app.use('/api/user', user_1.default);
 app.use('/api/products', product_1.default);
 app.use('/api/request', twillio_1.default);
+app.use('/api/images', image_1.default);
 app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message });
 });

@@ -8,7 +8,7 @@ import { sendMail } from "../utils/emailer";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture } = req.body;
     const expression: RegExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     const pass: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
     if (!pass.test(password.toString())) {
@@ -27,6 +27,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       name,
       email,
       password,
+      address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture
     });
     await newUser.save();
     res.status(200).json({ message: "registered successfully" });
