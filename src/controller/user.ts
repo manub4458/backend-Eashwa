@@ -8,7 +8,7 @@ import { sendMail } from "../utils/emailer";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture } = req.body;
+    const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture,post } = req.body;
     const expression: RegExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     const pass: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
     if (!pass.test(password.toString())) {
@@ -27,7 +27,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       name,
       email,
       password,
-      address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture
+      address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture,post
     });
     await newUser.save();
     res.status(200).json({ message: "registered successfully" });
@@ -63,7 +63,7 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('refreshToken', refreshToken, ({ httpOnly: true }));
     res.header('Authorization', `Bearer ${authToken}`);
 
-    res.status(200).json({ ok: true, message: "User login successfully", userId: user.id, userEmail: user.email, authToken: authToken });
+    res.status(200).json({ ok: true, message: "User login successfully",  user:user, authToken: authToken });
   } catch (err) {
     console.log(err);
     res.status(500).json({

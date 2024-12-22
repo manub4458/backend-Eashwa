@@ -25,6 +25,10 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
+    post: {
+        type: String,
+        default: ''
+    },
     passwordResetToken: {
         type: String,
         default: '',
@@ -47,7 +51,8 @@ const userSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        default: 'user',
+        enum: ['admin', 'employee', 'hr'],
+        default: 'employee',
     },
     employeeId: {
         type: String,
