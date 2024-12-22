@@ -1,6 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 import { genSaltSync, hashSync } from "bcrypt";
-
+type Role = "admin" | "employee" | "hr"
 interface IUser extends Document {
     name: string;
     email: string;
@@ -10,12 +10,13 @@ interface IUser extends Document {
     isVerified?: boolean;
     address?: string;
     aadhaarNumber?: number;
-    role?: string;
+    role?: 'admin' | 'employee' | 'hr'; 
     employeeId?: string;
     phone?: number;
+    post?:string;
     joiningDate?: string;
     targetAchieved?: string;
-    profilePicture?: string;
+    profilePicture?: string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -31,6 +32,10 @@ const userSchema = new Schema<IUser>({
     password: {
         type: String,
         required: true,
+    },
+    post: {
+        type: String,
+        default:''
     },
     passwordResetToken: {
         type: String,
@@ -54,7 +59,8 @@ const userSchema = new Schema<IUser>({
     },
     role: {
         type: String,
-        default: 'user',
+        enum: ['admin', 'employee','hr'], 
+        default: 'employee',
     },
     employeeId: {
         type: String,
