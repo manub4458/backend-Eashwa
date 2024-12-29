@@ -157,7 +157,7 @@ export const getAllEmployees = async (req: Request, res: Response) => {
     }
 
     const employees = await User.find({ role: 'employee' }).select('-password'); 
-    res.status(200).json({ employees });
+    res.status(200).json({ employees, hr:user });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

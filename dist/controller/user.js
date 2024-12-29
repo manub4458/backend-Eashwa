@@ -154,7 +154,7 @@ const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
             return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
         }
         const employees = yield user_1.default.find({ role: 'employee' }).select('-password');
-        res.status(200).json({ employees });
+        res.status(200).json({ employees, hr: user });
     }
     catch (error) {
         res.status(500).json({ message: 'Server error', error });
