@@ -27,11 +27,11 @@ const userSchema = new mongoose_1.Schema({
     },
     post: {
         type: String,
-        default: ''
+        default: "",
     },
     passwordResetToken: {
         type: String,
-        default: '',
+        default: "",
     },
     tokenExpire: {
         type: Date,
@@ -43,7 +43,7 @@ const userSchema = new mongoose_1.Schema({
     },
     address: {
         type: String,
-        default: '',
+        default: "",
     },
     aadhaarNumber: {
         type: Number,
@@ -51,12 +51,12 @@ const userSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'employee', 'hr'],
-        default: 'employee',
+        enum: ["admin", "employee", "hr"],
+        default: "employee",
     },
     employeeId: {
         type: String,
-        default: '',
+        default: "",
     },
     phone: {
         type: Number,
@@ -64,32 +64,42 @@ const userSchema = new mongoose_1.Schema({
     },
     joiningDate: {
         type: String,
-        default: '',
+        default: "",
     },
     targetAchieved: {
-        type: String,
-        default: '',
+        battery: {
+            type: Number,
+            default: 0,
+        },
+        eRickshaw: {
+            type: Number,
+            default: 0,
+        },
+        scooty: {
+            type: Number,
+            default: 0,
+        },
     },
     profilePicture: {
         type: String,
-        default: '',
+        default: "",
     },
 });
-userSchema.pre('save', function (next) {
+userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
-        if (!user.isModified('password') && !user.isModified('passwordResetToken')) {
+        if (!user.isModified("password") && !user.isModified("passwordResetToken")) {
             return next();
         }
         const salt = (0, bcrypt_1.genSaltSync)(10);
-        if (user.isModified('password')) {
+        if (user.isModified("password")) {
             user.password = (0, bcrypt_1.hashSync)(user.password, salt);
         }
-        if (user.isModified('passwordResetToken')) {
+        if (user.isModified("passwordResetToken")) {
             user.passwordResetToken = (0, bcrypt_1.hashSync)(user.passwordResetToken, salt);
         }
         next();
     });
 });
-const User = (0, mongoose_1.model)('User', userSchema);
+const User = (0, mongoose_1.model)("User", userSchema);
 exports.default = User;

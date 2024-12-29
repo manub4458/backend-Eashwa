@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
@@ -146,3 +146,48 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
 });
 exports.resetPassword = resetPassword;
+const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hr = req;
+        const user = yield user_1.default.findById(hr.userId);
+        if (user && user.role !== 'hr') {
+            return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        }
+        const employees = yield user_1.default.find({ role: 'employee' }).select('-password');
+        res.status(200).json({ employees });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+exports.getAllEmployees = getAllEmployees;
+const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
+    try {
+        const { id } = req.params;
+        const { battery, eRickshaw, scooty } = req.body;
+        const hrId = req;
+        const hr = yield user_1.default.findById(hrId.userId);
+        if (hr && hr.role !== 'hr') {
+            return res.status(403).json({ message: "Access denied. Only HR can update targets." });
+        }
+        if (battery === undefined || eRickshaw === undefined || scooty === undefined) {
+            return res.status(400).json({ message: "All target fields (battery, eRickshaw, scooty) are required." });
+        }
+        const user = yield user_1.default.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Employee not found." });
+        }
+        user.targetAchieved = {
+            battery: battery !== null && battery !== void 0 ? battery : (((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || 0),
+            eRickshaw: eRickshaw !== null && eRickshaw !== void 0 ? eRickshaw : (((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || 0),
+            scooty: scooty !== null && scooty !== void 0 ? scooty : (((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || 0),
+        };
+        yield user.save();
+        res.status(200).json({ message: "Target updated successfully.", user });
+    }
+    catch (error) {
+        res.status(500).json({ message: "An error occurred while updating the target.", error: error });
+    }
+});
+exports.updateTarget = updateTarget;
