@@ -147,5 +147,56 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllEmployees = async (req: Request, res: Response) => {
+  try {
+    const hr = (req as any);
+    const user  = await User.findById(hr.userId);
+
+    if (user && user.role !== 'hr') {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+
+    const employees = await User.find({ role: 'employee' }).select('-password'); 
+    res.status(200).json({ employees });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export const updateTarget = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { battery, eRickshaw, scooty } = req.body;
+
+    const hrId = (req as any);
+    const hr  = await User.findById(hrId.userId);
+
+    if (hr && hr.role !== 'hr') {
+      return res.status(403).json({ message: "Access denied. Only HR can update targets." });
+    }
+
+    if (battery === undefined || eRickshaw === undefined || scooty === undefined) {
+      return res.status(400).json({ message: "All target fields (battery, eRickshaw, scooty) are required." });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Employee not found." });
+    }
+
+    user.targetAchieved = {
+      battery: battery ?? (user.targetAchieved?.battery || 0),
+      eRickshaw: eRickshaw ?? (user.targetAchieved?.eRickshaw || 0),
+      scooty: scooty ?? (user.targetAchieved?.scooty || 0),
+    };
+
+    await user.save();
+
+    res.status(200).json({ message: "Target updated successfully.", user });
+  } catch (error) {
+    res.status(500).json({ message: "An error occurred while updating the target.", error: error });
+  }
+};
+
 
 
