@@ -11,6 +11,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
+const targetAchievedSchema = new mongoose_1.Schema({
+    total: {
+        type: Number,
+        default: 0,
+    },
+    pending: {
+        type: Number,
+        default: 0,
+    },
+    completed: {
+        type: Number,
+        default: 0,
+    },
+});
 const userSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -68,16 +82,16 @@ const userSchema = new mongoose_1.Schema({
     },
     targetAchieved: {
         battery: {
-            type: Number,
-            default: 0,
+            type: targetAchievedSchema,
+            default: () => ({}),
         },
         eRickshaw: {
-            type: Number,
-            default: 0,
+            type: targetAchievedSchema,
+            default: () => ({}),
         },
         scooty: {
-            type: Number,
-            default: 0,
+            type: targetAchievedSchema,
+            default: () => ({}),
         },
     },
     profilePicture: {

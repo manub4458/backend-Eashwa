@@ -1,15 +1,5 @@
 import {Schema, model, Document } from "mongoose";
-
-interface mUser extends Document {
-    name: string;
-    messageId:string;
-    whatsappNumber:string;
-    secondMessageId:string;
-    productDescription:string;
-    vendorName:string;
-    amount:string;
-    time:string;
-  }
+import { mUser } from "../types";
 
 const messageUserSchema = new Schema<mUser>({
     name: {
