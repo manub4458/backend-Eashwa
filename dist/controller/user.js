@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.getTopEmployees = exports.updateCompletedTarget = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
@@ -166,28 +166,117 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { id } = req.params;
         const { battery, eRickshaw, scooty } = req.body;
-        const hrId = req;
-        const hr = yield user_1.default.findById(hrId.userId);
-        if (hr && hr.role !== 'hr') {
+        const hrId = req.userId;
+        const hr = yield user_1.default.findById(hrId);
+        if (!hr || hr.role !== "hr") {
             return res.status(403).json({ message: "Access denied. Only HR can update targets." });
         }
         if (battery === undefined || eRickshaw === undefined || scooty === undefined) {
-            return res.status(400).json({ message: "All target fields (battery, eRickshaw, scooty) are required." });
+            return res.status(400).json({
+                message: "All target fields (battery, eRickshaw, scooty) are required.",
+            });
         }
         const user = yield user_1.default.findById(id);
         if (!user) {
             return res.status(404).json({ message: "Employee not found." });
         }
+        const updateField = (target, total) => ({
+            total: total,
+            pending: total - (target.completed || 0),
+            completed: target.completed || 0,
+        });
         user.targetAchieved = {
-            battery: battery !== null && battery !== void 0 ? battery : (((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || 0),
-            eRickshaw: eRickshaw !== null && eRickshaw !== void 0 ? eRickshaw : (((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || 0),
-            scooty: scooty !== null && scooty !== void 0 ? scooty : (((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || 0),
+            battery: updateField(((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || {}, battery),
+            eRickshaw: updateField(((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || {}, eRickshaw),
+            scooty: updateField(((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || {}, scooty),
         };
         yield user.save();
-        res.status(200).json({ message: "Target updated successfully.", user });
+        res.status(200).json({
+            message: "Target updated successfully.",
+            user,
+        });
     }
     catch (error) {
-        res.status(500).json({ message: "An error occurred while updating the target.", error: error });
+        res.status(500).json({
+            message: "An error occurred while updating the target.",
+            error: error,
+        });
     }
 });
 exports.updateTarget = updateTarget;
+const updateCompletedTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const id = req.userId;
+        const { key, value } = req.body;
+        if (!["battery", "eRickshaw", "scooty"].includes(key)) {
+            return res.status(400).json({ message: "Invalid key. Allowed keys are 'battery', 'eRickshaw', and 'scooty'." });
+        }
+        if (typeof value !== "number" || value <= 0) {
+            return res.status(400).json({ message: "Value must be a positive number." });
+        }
+        console.log("user", id);
+        const user = yield user_1.default.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Employee not found." });
+        }
+        const targetKey = key;
+        const target = (_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a[targetKey];
+        if (!target) {
+            return res.status(400).json({ message: `Target data for ${key} is not available.` });
+        }
+        if (target.pending < value) {
+            return res.status(400).json({ message: `Insufficient pending target for ${key}.` });
+        }
+        target.completed += value;
+        target.pending -= value;
+        yield user.save();
+        res.status(200).json({
+            message: `${key} target updated successfully.`,
+            user,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "An error occurred while updating the target.",
+            error: error,
+        });
+    }
+});
+exports.updateCompletedTarget = updateCompletedTarget;
+const getTopEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield user_1.default.find();
+        const calculatePercentage = (target) => {
+            if (!target.total || target.total === 0)
+                return 0;
+            return (target.completed / target.total) * 100;
+        };
+        const employeesWithPercentage = users.map((user) => {
+            var _a, _b, _c;
+            const batteryPercentage = calculatePercentage(((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || { total: 0, completed: 0, pending: 0 });
+            const eRickshawPercentage = calculatePercentage(((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || { total: 0, completed: 0, pending: 0 });
+            const scootyPercentage = calculatePercentage(((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || { total: 0, completed: 0, pending: 0 });
+            const overallPercentage = (batteryPercentage + eRickshawPercentage + scootyPercentage) / 3;
+            return {
+                user,
+                percentage: overallPercentage,
+            };
+        });
+        const topEmployees = employeesWithPercentage
+            .sort((a, b) => b.percentage - a.percentage)
+            .slice(0, 3)
+            .map((item) => (Object.assign(Object.assign({}, item.user.toObject()), { percentage: item.percentage.toFixed(2) })));
+        res.status(200).json({
+            message: "Top 3 employees based on target achievement percentage",
+            topEmployees,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "An error occurred while fetching top employees.",
+            error: error,
+        });
+    }
+});
+exports.getTopEmployees = getTopEmployees;

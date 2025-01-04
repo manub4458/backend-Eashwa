@@ -1,31 +1,22 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model } from "mongoose";
 import { genSaltSync, hashSync } from "bcrypt";
+import { IUser, TargetAchieved } from "../types";
 
-type Role = "admin" | "employee" | "hr";
 
-interface ITargetAchieved {
-  battery: number;
-  eRickshaw: number;
-  scooty: number;
-}
-
-interface IUser extends Document {
-  name: string;
-  email: string;
-  password: string;
-  passwordResetToken: string;
-  tokenExpire?: Date | null;
-  isVerified?: boolean;
-  address?: string;
-  aadhaarNumber?: number;
-  role?: Role;
-  employeeId?: string;
-  phone?: number;
-  post?: string;
-  joiningDate?: string;
-  targetAchieved?: ITargetAchieved;
-  profilePicture?: string;
-}
+const targetAchievedSchema = new Schema<TargetAchieved>({
+  total: {
+    type: Number,
+    default: 0,
+  },
+  pending: {
+    type: Number,
+    default: 0,
+  },
+  completed: {
+    type: Number,
+    default: 0,
+  },
+});
 
 const userSchema = new Schema<IUser>({
   name: {
@@ -84,16 +75,16 @@ const userSchema = new Schema<IUser>({
   },
   targetAchieved: {
     battery: {
-      type: Number,
-      default: 0,
+      type: targetAchievedSchema,
+      default: () => ({}),
     },
     eRickshaw: {
-      type: Number,
-      default: 0,
+      type: targetAchievedSchema,
+      default: () => ({}),
     },
     scooty: {
-      type: Number,
-      default: 0,
+      type: targetAchievedSchema,
+      default: () => ({}),
     },
   },
   profilePicture: {
