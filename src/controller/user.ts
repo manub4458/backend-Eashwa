@@ -13,6 +13,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture,post } = req.body;
     const expression: RegExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
     const pass: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
+
+    if(!role){
+      return res.status(407).json({ message: "role is required" });
+    }
     if (!pass.test(password.toString())) {
       return res.status(407).json({
         message: "Enter valid password with uppercase, lowercase, number & @",
@@ -39,38 +43,64 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 };
 
 
-
 export const login = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email })
+    const { userName, password } = req.body;
+
+    if (!userName || !password) {
+      return res.status(400).json({
+        message: "Email/Employee ID and password are required"
+      });
+    }
+
+    const user = await User.findOne({
+      $or: [
+        { email: userName },
+        { employeeId: userName }
+      ]
+    });
+
     if (!user) {
       return res.status(409).json({
         message: "User doesn't exist"
-      })
+      });
     }
 
-    const isMatch =  compareSync(password, user.password);
+    const isMatch = compareSync(password, user.password);
     if (!isMatch) {
       return res.status(409).json({
         message: "Invalid credentials"
-      })
+      });
     }
 
-    const authToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: '30m' });
-    const refreshToken = jwt.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: '2h' });
+    const authToken = jwt.sign(
+      { userId: user.id }, 
+      process.env.JWT_SECRET_KEY || " ", 
+      { expiresIn: '30m' }
+    );
+    
+    const refreshToken = jwt.sign(
+      { userId: user.id }, 
+      process.env.JWT_REFRESH_SECRET_KEY || " ", 
+      { expiresIn: '2h' }
+    );
 
-
-    res.cookie('authToken', authToken, ({ httpOnly: true }));
-    res.cookie('refreshToken', refreshToken, ({ httpOnly: true }));
+    res.cookie('authToken', authToken, { httpOnly: true });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true });
     res.header('Authorization', `Bearer ${authToken}`);
 
-    res.status(200).json({ ok: true, message: "User login successfully",  user:user, authToken: authToken });
+    res.status(200).json({ 
+      ok: true, 
+      message: "User login successful",  
+      user: user, 
+      authToken: authToken 
+    });
+    
   } catch (err) {
     console.log(err);
     res.status(500).json({
       message: "Something went wrong"
-    })
+    });
   }
 }
 
@@ -151,15 +181,21 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const getAllEmployees = async (req: Request, res: Response) => {
   try {
-    const hr = (req as any);
-    const user  = await User.findById(hr.userId);
+    const user = await User.findById((req as any).userId);
 
-    if (user && user.role !== 'hr') {
+    if (!user) {
+      return res.status(403).json({ message: 'Forbidden: User not found' });
+    }
+    if (!['hr', 'admin'].includes(user.role)) {
       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
     }
 
-    const employees = await User.find({ role: 'employee' }).select('-password'); 
-    res.status(200).json({ employees, hr:user });
+    const query = user.role === 'admin' 
+      ? { role: { $in: ['employee', 'hr'] } }  
+      : { role: 'employee' };    
+
+    const employees = await User.find(query).select('-password'); 
+    res.status(200).json({ employees, requestingUser: user });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -170,15 +206,25 @@ export const updateTarget = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { battery, eRickshaw, scooty } = req.body;
 
-    const hrId = (req as any).userId;
-    const hr = await User.findById(hrId);
-    if (!hr || hr.role !== "hr") {
-      return res.status(403).json({ message: "Access denied. Only HR can update targets." });
+    const requesterId = (req as any).userId;
+    const requester = await User.findById(requesterId);
+    if (!requester || !['hr', 'admin'].includes(requester.role)) {
+      return res.status(403).json({ message: "Access denied. Only HR and admin can update targets." });
     }
 
-    if (battery === undefined || eRickshaw === undefined || scooty === undefined) {
+    if (!battery || !eRickshaw || !scooty) {
       return res.status(400).json({
         message: "All target fields (battery, eRickshaw, scooty) are required.",
+      });
+    }
+
+    const validateTarget = (target: TargetAchieved) => {
+      return target.total !== undefined && target.completed !== undefined;
+    };
+
+    if (!validateTarget(battery) || !validateTarget(eRickshaw) || !validateTarget(scooty)) {
+      return res.status(400).json({
+        message: "Each target must include both 'total' and 'completed' values.",
       });
     }
 
@@ -187,71 +233,25 @@ export const updateTarget = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Employee not found." });
     }
 
-    const updateField = (target: Partial<TargetAchieved>, total: number): TargetAchieved => ({
-      total: total,
-      pending: total - (target.completed || 0),
-      completed: target.completed || 0,
-    });
+    const updateField = (newTarget: { total: number; completed: number }): TargetAchieved => {
+      const completed = Math.min(newTarget.completed, newTarget.total);
+      return {
+        total: newTarget.total,
+        completed: completed,
+        pending: newTarget.total - completed,
+      };
+    };
 
     user.targetAchieved = {
-      battery: updateField(user.targetAchieved?.battery || {}, battery),
-      eRickshaw: updateField(user.targetAchieved?.eRickshaw || {}, eRickshaw),
-      scooty: updateField(user.targetAchieved?.scooty || {}, scooty),
+      battery: updateField(battery),
+      eRickshaw: updateField(eRickshaw),
+      scooty: updateField(scooty),
     };
 
     await user.save();
 
     res.status(200).json({
       message: "Target updated successfully.",
-      user,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "An error occurred while updating the target.",
-      error: error,
-    });
-  }
-};
-
-
-export const updateCompletedTarget = async (req: Request, res: Response) => {
-  try {
-    const id  = (req as any).userId;
-    const { key, value } = req.body;
-
-    if (!["battery", "eRickshaw", "scooty"].includes(key)) {
-      return res.status(400).json({ message: "Invalid key. Allowed keys are 'battery', 'eRickshaw', and 'scooty'." });
-    }
-
-    if (typeof value !== "number" || value <= 0) {
-      return res.status(400).json({ message: "Value must be a positive number." });
-    }
-
-    console.log("user",id);
-
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: "Employee not found." });
-    }
-
-    const targetKey = key as keyof ITargetAchieved;
-    const target = user.targetAchieved?.[targetKey];
-
-    if (!target) {
-      return res.status(400).json({ message: `Target data for ${key} is not available.` });
-    }
-
-    if (target.pending < value) {
-      return res.status(400).json({ message: `Insufficient pending target for ${key}.` });
-    }
-
-    target.completed += value;
-    target.pending -= value;
-
-    await user.save();
-
-    res.status(200).json({
-      message: `${key} target updated successfully.`,
       user,
     });
   } catch (error) {
@@ -301,6 +301,40 @@ export const getTopEmployees = async (req: Request, res: Response) => {
       message: "An error occurred while fetching top employees.",
       error: error,
     });
+  }
+};
+
+export const getEmployeeDetails = async (req: Request, res: Response) => {
+  try {
+    const requestingUser = await User.findById((req as any).userId);
+
+    if (!requestingUser || !['hr', 'admin'].includes(requestingUser.role)) {
+      return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+    }
+
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const user = await User.findById(userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (requestingUser.role === 'hr' && user.role !== 'employee') {
+      return res.status(403).json({ message: 'HR can only view employee details' });
+    }
+
+    res.status(200).json({ user });
+
+  } catch (error) {
+    if (error instanceof Error && error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid user ID format' });
+    }
+    res.status(500).json({ message: 'Server error', error });
   }
 };
 

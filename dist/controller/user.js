@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTopEmployees = exports.updateCompletedTarget = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
@@ -23,6 +23,9 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
         const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post } = req.body;
         const expression = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
         const pass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
+        if (!role) {
+            return res.status(407).json({ message: "role is required" });
+        }
         if (!pass.test(password.toString())) {
             return res.status(407).json({
                 message: "Enter valid password with uppercase, lowercase, number & @",
@@ -51,8 +54,18 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
 exports.register = register;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, password } = req.body;
-        const user = yield user_1.default.findOne({ email });
+        const { userName, password } = req.body;
+        if (!userName || !password) {
+            return res.status(400).json({
+                message: "Email/Employee ID and password are required"
+            });
+        }
+        const user = yield user_1.default.findOne({
+            $or: [
+                { email: userName },
+                { employeeId: userName }
+            ]
+        });
         if (!user) {
             return res.status(409).json({
                 message: "User doesn't exist"
@@ -66,10 +79,15 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const authToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: '30m' });
         const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: '2h' });
-        res.cookie('authToken', authToken, ({ httpOnly: true }));
-        res.cookie('refreshToken', refreshToken, ({ httpOnly: true }));
+        res.cookie('authToken', authToken, { httpOnly: true });
+        res.cookie('refreshToken', refreshToken, { httpOnly: true });
         res.header('Authorization', `Bearer ${authToken}`);
-        res.status(200).json({ ok: true, message: "User login successfully", user: user, authToken: authToken });
+        res.status(200).json({
+            ok: true,
+            message: "User login successful",
+            user: user,
+            authToken: authToken
+        });
     }
     catch (err) {
         console.log(err);
@@ -148,13 +166,18 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 exports.resetPassword = resetPassword;
 const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const hr = req;
-        const user = yield user_1.default.findById(hr.userId);
-        if (user && user.role !== 'hr') {
+        const user = yield user_1.default.findById(req.userId);
+        if (!user) {
+            return res.status(403).json({ message: 'Forbidden: User not found' });
+        }
+        if (!['hr', 'admin'].includes(user.role)) {
             return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
         }
-        const employees = yield user_1.default.find({ role: 'employee' }).select('-password');
-        res.status(200).json({ employees, hr: user });
+        const query = user.role === 'admin'
+            ? { role: { $in: ['employee', 'hr'] } }
+            : { role: 'employee' };
+        const employees = yield user_1.default.find(query).select('-password');
+        res.status(200).json({ employees, requestingUser: user });
     }
     catch (error) {
         res.status(500).json({ message: 'Server error', error });
@@ -162,33 +185,43 @@ const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
 });
 exports.getAllEmployees = getAllEmployees;
 const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
     try {
         const { id } = req.params;
         const { battery, eRickshaw, scooty } = req.body;
-        const hrId = req.userId;
-        const hr = yield user_1.default.findById(hrId);
-        if (!hr || hr.role !== "hr") {
-            return res.status(403).json({ message: "Access denied. Only HR can update targets." });
+        const requesterId = req.userId;
+        const requester = yield user_1.default.findById(requesterId);
+        if (!requester || !['hr', 'admin'].includes(requester.role)) {
+            return res.status(403).json({ message: "Access denied. Only HR and admin can update targets." });
         }
-        if (battery === undefined || eRickshaw === undefined || scooty === undefined) {
+        if (!battery || !eRickshaw || !scooty) {
             return res.status(400).json({
                 message: "All target fields (battery, eRickshaw, scooty) are required.",
+            });
+        }
+        const validateTarget = (target) => {
+            return target.total !== undefined && target.completed !== undefined;
+        };
+        if (!validateTarget(battery) || !validateTarget(eRickshaw) || !validateTarget(scooty)) {
+            return res.status(400).json({
+                message: "Each target must include both 'total' and 'completed' values.",
             });
         }
         const user = yield user_1.default.findById(id);
         if (!user) {
             return res.status(404).json({ message: "Employee not found." });
         }
-        const updateField = (target, total) => ({
-            total: total,
-            pending: total - (target.completed || 0),
-            completed: target.completed || 0,
-        });
+        const updateField = (newTarget) => {
+            const completed = Math.min(newTarget.completed, newTarget.total);
+            return {
+                total: newTarget.total,
+                completed: completed,
+                pending: newTarget.total - completed,
+            };
+        };
         user.targetAchieved = {
-            battery: updateField(((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || {}, battery),
-            eRickshaw: updateField(((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || {}, eRickshaw),
-            scooty: updateField(((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || {}, scooty),
+            battery: updateField(battery),
+            eRickshaw: updateField(eRickshaw),
+            scooty: updateField(scooty),
         };
         yield user.save();
         res.status(200).json({
@@ -204,46 +237,6 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.updateTarget = updateTarget;
-const updateCompletedTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    try {
-        const id = req.userId;
-        const { key, value } = req.body;
-        if (!["battery", "eRickshaw", "scooty"].includes(key)) {
-            return res.status(400).json({ message: "Invalid key. Allowed keys are 'battery', 'eRickshaw', and 'scooty'." });
-        }
-        if (typeof value !== "number" || value <= 0) {
-            return res.status(400).json({ message: "Value must be a positive number." });
-        }
-        console.log("user", id);
-        const user = yield user_1.default.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: "Employee not found." });
-        }
-        const targetKey = key;
-        const target = (_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a[targetKey];
-        if (!target) {
-            return res.status(400).json({ message: `Target data for ${key} is not available.` });
-        }
-        if (target.pending < value) {
-            return res.status(400).json({ message: `Insufficient pending target for ${key}.` });
-        }
-        target.completed += value;
-        target.pending -= value;
-        yield user.save();
-        res.status(200).json({
-            message: `${key} target updated successfully.`,
-            user,
-        });
-    }
-    catch (error) {
-        res.status(500).json({
-            message: "An error occurred while updating the target.",
-            error: error,
-        });
-    }
-});
-exports.updateCompletedTarget = updateCompletedTarget;
 const getTopEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const users = yield user_1.default.find();
@@ -280,3 +273,30 @@ const getTopEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.getTopEmployees = getTopEmployees;
+const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const requestingUser = yield user_1.default.findById(req.userId);
+        if (!requestingUser || !['hr', 'admin'].includes(requestingUser.role)) {
+            return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        }
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+        const user = yield user_1.default.findById(userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (requestingUser.role === 'hr' && user.role !== 'employee') {
+            return res.status(403).json({ message: 'HR can only view employee details' });
+        }
+        res.status(200).json({ user });
+    }
+    catch (error) {
+        if (error instanceof Error && error.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid user ID format' });
+        }
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+exports.getEmployeeDetails = getEmployeeDetails;
