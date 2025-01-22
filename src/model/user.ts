@@ -60,6 +60,7 @@ const userSchema = new Schema<IUser>({
     type: String,
     enum: ["admin", "employee", "hr"],
     default: "employee",
+    required: true,
   },
   employeeId: {
     type: String,
