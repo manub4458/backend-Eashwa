@@ -54,7 +54,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const user = await User.findOne({
-      $or: [
+      $or: [  
         { email: userName },
         { employeeId: userName }
       ]
@@ -206,6 +206,8 @@ export const updateTarget = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { battery, eRickshaw, scooty } = req.body;
 
+    console.log(req.body);
+
     const requesterId = (req as any).userId;
     const requester = await User.findById(requesterId);
     if (!requester || !['hr', 'admin'].includes(requester.role)) {
@@ -312,7 +314,7 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
     }
 
-    const { userId } = req.params;
+    const {userId} = req.params;
 
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });

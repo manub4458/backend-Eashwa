@@ -11,7 +11,7 @@ router.post('/otp-verify', verifyOtp);
 router.put('/reset-password', resetPassword);
 router.put("/update-target/:id", authenticateToken, updateTarget);
 router.get('/employees', authenticateToken, getAllEmployees);
-router.get('/employee-detail/:id', authenticateToken, getEmployeeDetails);
+router.get('/employee-detail/:userId', authenticateToken, getEmployeeDetails);
 router.get('/top-employees', getTopEmployees)
 
 
