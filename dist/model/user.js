@@ -67,6 +67,7 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         enum: ["admin", "employee", "hr"],
         default: "employee",
+        required: true,
     },
     employeeId: {
         type: String,

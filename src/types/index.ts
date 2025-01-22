@@ -23,7 +23,7 @@ export interface IUser extends Document {
   isVerified?: boolean;
   address?: string;
   aadhaarNumber?: number;
-  role?: Role;
+  role: Role;
   employeeId?: string;
   phone?: number;
   post?: string;

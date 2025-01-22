@@ -10,7 +10,7 @@ router.post('/forgot-password', user_1.forgotPassword);
 router.post('/otp-verify', user_1.verifyOtp);
 router.put('/reset-password', user_1.resetPassword);
 router.put("/update-target/:id", authMiddleware_1.authenticateToken, user_1.updateTarget);
-router.put("/update-completed-target", authMiddleware_1.authenticateToken, user_1.updateCompletedTarget);
 router.get('/employees', authMiddleware_1.authenticateToken, user_1.getAllEmployees);
+router.get('/employee-detail/:id', authMiddleware_1.authenticateToken, user_1.getEmployeeDetails);
 router.get('/top-employees', user_1.getTopEmployees);
 exports.default = router;
