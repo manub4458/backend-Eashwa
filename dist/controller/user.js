@@ -188,6 +188,7 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { id } = req.params;
         const { battery, eRickshaw, scooty } = req.body;
+        console.log(req.body);
         const requesterId = req.userId;
         const requester = yield user_1.default.findById(requesterId);
         if (!requester || !['hr', 'admin'].includes(requester.role)) {
