@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 export type Role = "admin" | "employee" | "hr";
 
@@ -13,6 +13,17 @@ export interface ITargetAchieved {
   eRickshaw?: TargetAchieved;
   scooty?: TargetAchieved;
 }
+
+export interface IVisitor extends Document {
+  clientName: string;
+  clientPhoneNumber: number;
+  clientAddress: string;
+  visitDateTime: Date;
+  purpose: string;
+  feedback?: string;
+  visitedBy?: Types.ObjectId; 
+}
+
 
 export interface IUser extends Document {
   name: string;
@@ -30,6 +41,7 @@ export interface IUser extends Document {
   joiningDate?: string;
   targetAchieved?: ITargetAchieved;
   profilePicture?: string;
+  visitors?: Types.ObjectId[]
 }
 
 export interface mUser extends Document {

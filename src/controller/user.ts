@@ -5,8 +5,7 @@ import User from "../model/user";
 import { authenticator } from "otplib";
 import { sendMail } from "../utils/emailer";
 import { ITargetAchieved, TargetAchieved } from "../types";
-
-
+import Visitor from "../model/visitor";
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -206,8 +205,6 @@ export const updateTarget = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { battery, eRickshaw, scooty } = req.body;
 
-    console.log(req.body);
-
     const requesterId = (req as any).userId;
     const requester = await User.findById(requesterId);
     if (!requester || !['hr', 'admin'].includes(requester.role)) {
@@ -314,7 +311,7 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
     }
 
-    const {userId} = req.params;
+    const { userId } = req.params;
 
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
@@ -330,7 +327,24 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'HR can only view employee details' });
     }
 
-    res.status(200).json({ user });
+    const visitors = await Visitor.find({ visitedBy: userId })
+      .populate({
+        path: "visitedBy",
+        select: "name", 
+      })
+      .exec();
+
+    const visitorDetails = visitors.map((visitor) => ({
+      clientName: visitor.clientName,
+      clientPhoneNumber: visitor.clientPhoneNumber,
+      clientAddress: visitor.clientAddress,
+      visitDateTime: visitor.visitDateTime,
+      purpose: visitor.purpose,
+      feedback: visitor.feedback,
+      addedBy: (visitor.visitedBy as any).name,
+    }));
+
+    res.status(200).json({ user, visitors: visitorDetails });
 
   } catch (error) {
     if (error instanceof Error && error.name === 'CastError') {
@@ -340,6 +354,74 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
   }
 };
 
+export const addVisitor = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+    const {
+      clientName,
+      clientPhoneNumber,
+      clientAddress,
+      visitDateTime,
+      purpose,
+      feedback,
+    } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const newVisitor = new Visitor({
+      clientName,
+      clientPhoneNumber,
+      clientAddress,
+      visitDateTime,
+      purpose,
+      feedback,
+      visitedBy: userId,
+    });
+
+    const savedVisitor = await newVisitor.save();
+    user.visitors = user.visitors || [];
+    user.visitors.push(savedVisitor._id as any);
+    await user.save();
+
+    return res.status(201).json({
+      message: "Visitor added successfully",
+      visitor: savedVisitor,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const getVisitors = async (req: Request, res: Response) => {
+  try{
+    const userId = (req as any).userId;
+
+    const visitors = await Visitor.find({ visitedBy: userId })
+    .populate({
+      path: "visitedBy",
+      select: "name", 
+    })
+    .exec();
+
+  const visitorDetails = visitors.map((visitor) => ({
+    clientName: visitor.clientName,
+    clientPhoneNumber: visitor.clientPhoneNumber,
+    clientAddress: visitor.clientAddress,
+    visitDateTime: visitor.visitDateTime,
+    purpose: visitor.purpose,
+    feedback: visitor.feedback,
+    addedBy: (visitor.visitedBy as any).name,
+  }));
+
+  res.status(200).json({ visitorDetails });
+
+  }catch (error) {
+    return res.status(500).json({ message: "Internal server error", error });
+  }
+}
 
 
 
