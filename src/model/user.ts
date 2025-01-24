@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import { genSaltSync, hashSync } from "bcrypt";
 import { IUser, TargetAchieved } from "../types";
 
@@ -92,6 +92,12 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: "",
   },
+  visitors: [
+    {
+      type: Types.ObjectId,
+      ref: "Visitor",
+    },
+  ],
 });
 
 userSchema.pre("save", async function (next) {

@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
 const otplib_1 = require("otplib");
 const emailer_1 = require("../utils/emailer");
+const visitor_1 = __importDefault(require("../model/visitor"));
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post } = req.body;
@@ -188,7 +189,6 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { id } = req.params;
         const { battery, eRickshaw, scooty } = req.body;
-        console.log(req.body);
         const requesterId = req.userId;
         const requester = yield user_1.default.findById(requesterId);
         if (!requester || !['hr', 'admin'].includes(requester.role)) {
@@ -291,7 +291,22 @@ const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (requestingUser.role === 'hr' && user.role !== 'employee') {
             return res.status(403).json({ message: 'HR can only view employee details' });
         }
-        res.status(200).json({ user });
+        const visitors = yield visitor_1.default.find({ visitedBy: userId })
+            .populate({
+            path: "visitedBy",
+            select: "name",
+        })
+            .exec();
+        const visitorDetails = visitors.map((visitor) => ({
+            clientName: visitor.clientName,
+            clientPhoneNumber: visitor.clientPhoneNumber,
+            clientAddress: visitor.clientAddress,
+            visitDateTime: visitor.visitDateTime,
+            purpose: visitor.purpose,
+            feedback: visitor.feedback,
+            addedBy: visitor.visitedBy.name,
+        }));
+        res.status(200).json({ user, visitors: visitorDetails });
     }
     catch (error) {
         if (error instanceof Error && error.name === 'CastError') {
@@ -301,3 +316,59 @@ const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 });
 exports.getEmployeeDetails = getEmployeeDetails;
+const addVisitor = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const { clientName, clientPhoneNumber, clientAddress, visitDateTime, purpose, feedback, } = req.body;
+        const user = yield user_1.default.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const newVisitor = new visitor_1.default({
+            clientName,
+            clientPhoneNumber,
+            clientAddress,
+            visitDateTime,
+            purpose,
+            feedback,
+            visitedBy: userId,
+        });
+        const savedVisitor = yield newVisitor.save();
+        user.visitors = user.visitors || [];
+        user.visitors.push(savedVisitor._id);
+        yield user.save();
+        return res.status(201).json({
+            message: "Visitor added successfully",
+            visitor: savedVisitor,
+        });
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal server error", error });
+    }
+});
+exports.addVisitor = addVisitor;
+const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const visitors = yield visitor_1.default.find({ visitedBy: userId })
+            .populate({
+            path: "visitedBy",
+            select: "name",
+        })
+            .exec();
+        const visitorDetails = visitors.map((visitor) => ({
+            clientName: visitor.clientName,
+            clientPhoneNumber: visitor.clientPhoneNumber,
+            clientAddress: visitor.clientAddress,
+            visitDateTime: visitor.visitDateTime,
+            purpose: visitor.purpose,
+            feedback: visitor.feedback,
+            addedBy: visitor.visitedBy.name,
+        }));
+        res.status(200).json({ visitorDetails });
+    }
+    catch (error) {
+        return res.status(500).json({ message: "Internal server error", error });
+    }
+});
+exports.getVisitors = getVisitors;

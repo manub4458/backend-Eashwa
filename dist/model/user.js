@@ -99,6 +99,12 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         default: "",
     },
+    visitors: [
+        {
+            type: mongoose_1.Types.ObjectId,
+            ref: "Visitor",
+        },
+    ],
 });
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
