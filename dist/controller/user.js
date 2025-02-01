@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12,16 +35,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.getLeads = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
 const otplib_1 = require("otplib");
 const emailer_1 = require("../utils/emailer");
 const visitor_1 = __importDefault(require("../model/visitor"));
+const healper_1 = require("../utils/healper");
+const lead_1 = __importDefault(require("../model/lead"));
+const XLSX = __importStar(require("xlsx"));
+const axios_1 = __importDefault(require("axios"));
+const mongoose_1 = require("mongoose");
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post } = req.body;
+        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post, } = req.body;
         const expression = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
         const pass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
         if (!role) {
@@ -43,7 +71,15 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             name,
             email,
             password,
-            address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post
+            address,
+            aadhaarNumber,
+            role,
+            employeeId,
+            phone,
+            joiningDate,
+            targetAchieved,
+            profilePicture,
+            post,
         });
         yield newUser.save();
         res.status(200).json({ message: "registered successfully" });
@@ -58,42 +94,39 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { userName, password } = req.body;
         if (!userName || !password) {
             return res.status(400).json({
-                message: "Email/Employee ID and password are required"
+                message: "Email/Employee ID and password are required",
             });
         }
         const user = yield user_1.default.findOne({
-            $or: [
-                { email: userName },
-                { employeeId: userName }
-            ]
+            $or: [{ email: userName }, { employeeId: userName }],
         });
         if (!user) {
             return res.status(409).json({
-                message: "User doesn't exist"
+                message: "User doesn't exist",
             });
         }
         const isMatch = (0, bcrypt_1.compareSync)(password, user.password);
         if (!isMatch) {
             return res.status(409).json({
-                message: "Invalid credentials"
+                message: "Invalid credentials",
             });
         }
-        const authToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: '30m' });
-        const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: '2h' });
-        res.cookie('authToken', authToken, { httpOnly: true });
-        res.cookie('refreshToken', refreshToken, { httpOnly: true });
-        res.header('Authorization', `Bearer ${authToken}`);
+        const authToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: "30m" });
+        const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: "2h" });
+        res.cookie("authToken", authToken, { httpOnly: true });
+        res.cookie("refreshToken", refreshToken, { httpOnly: true });
+        res.header("Authorization", `Bearer ${authToken}`);
         res.status(200).json({
             ok: true,
             message: "User login successful",
             user: user,
-            authToken: authToken
+            authToken: authToken,
         });
     }
     catch (err) {
         console.log(err);
         res.status(500).json({
-            message: "Something went wrong"
+            message: "Something went wrong",
         });
     }
 });
@@ -103,7 +136,9 @@ const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const { email } = req.body;
         const user = yield user_1.default.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "User with this email does not exist" });
+            return res
+                .status(400)
+                .json({ message: "User with this email does not exist" });
         }
         const otp = otplib_1.authenticator.generateSecret().slice(0, 6);
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
@@ -123,15 +158,18 @@ const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { email, otp } = req.body;
         const user = yield user_1.default.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "User with this email does not exist" });
+            return res
+                .status(400)
+                .json({ message: "User with this email does not exist" });
         }
-        if (user.passwordResetToken.length === 0 || (user.tokenExpire && user.tokenExpire < new Date())) {
+        if (user.passwordResetToken.length === 0 ||
+            (user.tokenExpire && user.tokenExpire < new Date())) {
             return res.status(400).json({ message: "OTP has expired" });
         }
         const isMatch = (0, bcrypt_1.compareSync)(otp, user.passwordResetToken);
         if (!isMatch) {
             return res.status(409).json({
-                message: "Invalid otp"
+                message: "Invalid otp",
             });
         }
         user.isVerified = true;
@@ -148,13 +186,17 @@ const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const { email, newPassword } = req.body;
         const user = yield user_1.default.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "User with this email does not exist" });
+            return res
+                .status(400)
+                .json({ message: "User with this email does not exist" });
         }
         if (!user.isVerified) {
-            return res.status(400).json({ message: "User is not verified. Please verify the OTP first." });
+            return res.status(400).json({
+                message: "User is not verified. Please verify the OTP first.",
+            });
         }
         user.password = newPassword;
-        user.passwordResetToken = '';
+        user.passwordResetToken = "";
         user.tokenExpire = null;
         user.isVerified = false;
         yield user.save();
@@ -169,19 +211,21 @@ const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
     try {
         const user = yield user_1.default.findById(req.userId);
         if (!user) {
-            return res.status(403).json({ message: 'Forbidden: User not found' });
+            return res.status(403).json({ message: "Forbidden: User not found" });
         }
-        if (!['hr', 'admin'].includes(user.role)) {
-            return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        if (!["hr", "admin"].includes(user.role)) {
+            return res
+                .status(403)
+                .json({ message: "Forbidden: Insufficient permissions" });
         }
-        const query = user.role === 'admin'
-            ? { role: { $in: ['employee', 'hr'] } }
-            : { role: 'employee' };
-        const employees = yield user_1.default.find(query).select('-password');
+        const query = user.role === "admin"
+            ? { role: { $in: ["employee", "hr"] } }
+            : { role: "employee" };
+        const employees = yield user_1.default.find(query).select("-password");
         res.status(200).json({ employees, requestingUser: user });
     }
     catch (error) {
-        res.status(500).json({ message: 'Server error', error });
+        res.status(500).json({ message: "Server error", error });
     }
 });
 exports.getAllEmployees = getAllEmployees;
@@ -191,8 +235,10 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const { battery, eRickshaw, scooty } = req.body;
         const requesterId = req.userId;
         const requester = yield user_1.default.findById(requesterId);
-        if (!requester || !['hr', 'admin'].includes(requester.role)) {
-            return res.status(403).json({ message: "Access denied. Only HR and admin can update targets." });
+        if (!requester || !["hr", "admin"].includes(requester.role)) {
+            return res.status(403).json({
+                message: "Access denied. Only HR and admin can update targets.",
+            });
         }
         if (!battery || !eRickshaw || !scooty) {
             return res.status(400).json({
@@ -202,7 +248,9 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const validateTarget = (target) => {
             return target.total !== undefined && target.completed !== undefined;
         };
-        if (!validateTarget(battery) || !validateTarget(eRickshaw) || !validateTarget(scooty)) {
+        if (!validateTarget(battery) ||
+            !validateTarget(eRickshaw) ||
+            !validateTarget(scooty)) {
             return res.status(400).json({
                 message: "Each target must include both 'total' and 'completed' values.",
             });
@@ -277,19 +325,23 @@ exports.getTopEmployees = getTopEmployees;
 const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const requestingUser = yield user_1.default.findById(req.userId);
-        if (!requestingUser || !['hr', 'admin'].includes(requestingUser.role)) {
-            return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+        if (!requestingUser || !["hr", "admin"].includes(requestingUser.role)) {
+            return res
+                .status(403)
+                .json({ message: "Forbidden: Insufficient permissions" });
         }
         const { userId } = req.params;
         if (!userId) {
-            return res.status(400).json({ message: 'User ID is required' });
+            return res.status(400).json({ message: "User ID is required" });
         }
-        const user = yield user_1.default.findById(userId).select('-password');
+        const user = yield user_1.default.findById(userId).select("-password");
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: "User not found" });
         }
-        if (requestingUser.role === 'hr' && user.role !== 'employee') {
-            return res.status(403).json({ message: 'HR can only view employee details' });
+        if (requestingUser.role === "hr" && user.role !== "employee") {
+            return res
+                .status(403)
+                .json({ message: "HR can only view employee details" });
         }
         const visitors = yield visitor_1.default.find({ visitedBy: userId })
             .populate({
@@ -306,13 +358,48 @@ const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, funct
             feedback: visitor.feedback,
             addedBy: visitor.visitedBy.name,
         }));
-        res.status(200).json({ user, visitors: visitorDetails });
+        const leads = yield lead_1.default.find({ leadBy: userId })
+            .sort({ leadDate: -1 })
+            .select("-__v")
+            .exec();
+        const leadDetails = leads.map((lead) => ({
+            id: lead._id,
+            leadDate: lead.leadDate
+                ? new Date(lead.leadDate).toISOString().split("T")[0]
+                : null,
+            callingDate: lead.callingDate
+                ? new Date(lead.callingDate).toISOString().split("T")[0]
+                : null,
+            agentName: lead.agentName,
+            customerName: lead.customerName,
+            mobileNumber: lead.mobileNumber,
+            occupation: lead.occupation,
+            location: lead.location,
+            town: lead.town,
+            state: lead.state,
+            status: lead.status,
+            remark: lead.remark,
+            interestedAndNotInterested: lead.interestedAndNotInterested,
+            officeVisitRequired: lead.officeVisitRequired ? "Yes" : "No",
+        }));
+        const leadsSummary = {
+            totalLeads: leads.length,
+            interestedLeads: leads.filter((lead) => lead.interestedAndNotInterested.toLowerCase().includes("interested")).length,
+            pendingLeads: leads.filter((lead) => lead.status.toLowerCase().includes("pending")).length,
+            requiresVisit: leads.filter((lead) => lead.officeVisitRequired).length,
+        };
+        res.status(200).json({
+            user,
+            visitors: visitorDetails,
+            leads: leadDetails,
+            leadsSummary,
+        });
     }
     catch (error) {
-        if (error instanceof Error && error.name === 'CastError') {
-            return res.status(400).json({ message: 'Invalid user ID format' });
+        if (error instanceof Error && error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid user ID format" });
         }
-        res.status(500).json({ message: 'Server error', error });
+        res.status(500).json({ message: "Server error", error });
     }
 });
 exports.getEmployeeDetails = getEmployeeDetails;
@@ -372,3 +459,161 @@ const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getVisitors = getVisitors;
+const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { fileUrl } = req.body;
+        if (!fileUrl) {
+            return res.status(400).json({
+                success: false,
+                message: "File URL is required",
+            });
+        }
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required",
+            });
+        }
+        const userId = req.userId;
+        const requester = yield user_1.default.findById(userId);
+        if (!requester || !["hr", "admin"].includes(requester.role)) {
+            return res.status(403).json({
+                message: "Access denied. Only HR and admin can add leads.",
+            });
+        }
+        const response = yield axios_1.default.get(fileUrl, { responseType: "arraybuffer" });
+        const buffer = Buffer.from(response.data);
+        const workbook = XLSX.read(buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+        const firstRow = data[0];
+        const missingHeaders = Object.keys(healper_1.headerMapping).filter((header) => !(header in firstRow));
+        if (missingHeaders.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Excel format. Missing headers: " + missingHeaders.join(", "),
+            });
+        }
+        const leads = [];
+        const invalidRows = [];
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!(0, healper_1.validateLeadData)(row)) {
+                invalidRows.push(i + 2);
+                continue;
+            }
+            try {
+                const lead = (0, healper_1.convertRowToLead)(row, id);
+                leads.push(lead);
+            }
+            catch (error) {
+                invalidRows.push(i + 2);
+                console.error(`Error processing row ${i + 2}:`, error);
+            }
+        }
+        if (leads.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid leads found in the Excel file",
+                invalidRows,
+            });
+        }
+        const session = yield lead_1.default.startSession();
+        try {
+            session.startTransaction();
+            const savedLeads = yield lead_1.default.insertMany(leads, { session });
+            yield user_1.default.findByIdAndUpdate(id, {
+                $push: {
+                    leads: {
+                        $each: savedLeads.map((lead) => lead._id),
+                    },
+                },
+            }, { session });
+            yield session.commitTransaction();
+            return res.status(200).json({
+                success: true,
+                message: `Successfully processed ${leads.length} leads`,
+                totalRows: data.length,
+                successfulRows: leads.length,
+                invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
+            });
+        }
+        catch (error) {
+            yield session.abortTransaction();
+            throw error;
+        }
+        finally {
+            session.endSession();
+        }
+    }
+    catch (error) {
+        console.error("Error processing Excel file:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error processing Excel file",
+            error: error,
+        });
+    }
+});
+exports.processExcelAndCreateLeads = processExcelAndCreateLeads;
+const getLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const userId = req.userId;
+        if (!mongoose_1.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID format",
+            });
+        }
+        const user = yield user_1.default.findById(userId).populate({
+            path: "leads",
+            select: "-__v",
+            options: {
+                sort: { leadDate: -1 },
+            },
+        });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        const formattedLeads = (_a = user === null || user === void 0 ? void 0 : user.leads) === null || _a === void 0 ? void 0 : _a.map((lead) => ({
+            id: lead._id,
+            leadDate: lead.leadDate
+                ? new Date(lead.leadDate).toISOString().split("T")[0]
+                : null,
+            callingDate: lead.callingDate
+                ? new Date(lead.callingDate).toISOString().split("T")[0]
+                : null,
+            agentName: lead.agentName,
+            customerName: lead.customerName,
+            mobileNumber: lead.mobileNumber,
+            occupation: lead.occupation,
+            location: lead.location,
+            town: lead.town,
+            state: lead.state,
+            status: lead.status,
+            remark: lead.remark,
+            interestedAndNotInterested: lead.interestedAndNotInterested,
+            officeVisitRequired: lead.officeVisitRequired ? "Yes" : "No",
+        }));
+        return res.status(200).json({
+            success: true,
+            count: formattedLeads ? formattedLeads.length : 0,
+            leads: formattedLeads,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching leads:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching leads",
+            error: error,
+        });
+    }
+});
+exports.getLeads = getLeads;

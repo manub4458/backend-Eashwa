@@ -105,6 +105,12 @@ const userSchema = new mongoose_1.Schema({
             ref: "Visitor",
         },
     ],
+    leads: [
+        {
+            type: mongoose_1.Types.ObjectId,
+            ref: "Lead",
+        },
+    ]
 });
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
