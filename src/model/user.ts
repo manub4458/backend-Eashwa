@@ -98,6 +98,12 @@ const userSchema = new Schema<IUser>({
       ref: "Visitor",
     },
   ],
+  leads:[
+    {
+      type: Types.ObjectId,
+      ref: "Lead",
+    },
+  ]
 });
 
 userSchema.pre("save", async function (next) {
