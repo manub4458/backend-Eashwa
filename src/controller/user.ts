@@ -569,6 +569,14 @@ export const processExcelAndCreateLeads = async (
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+
+    if (data.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Excel file is empty",
+      });
+    }
+
     const firstRow = data[0];
     const missingHeaders = Object.keys(headerMapping).filter(
       (header) => !(header in firstRow)
@@ -584,12 +592,17 @@ export const processExcelAndCreateLeads = async (
 
     const leads = [];
     const invalidRows = [];
+    const errors = [];
 
     for (let i = 0; i < data.length; i++) {
       const row = data[i];
+      const rowNumber = i + 2;
 
       if (!validateLeadData(row)) {
-        invalidRows.push(i + 2);
+        invalidRows.push({
+          row: rowNumber,
+          reason: "Missing or invalid data",
+        });
         continue;
       }
 
@@ -597,8 +610,11 @@ export const processExcelAndCreateLeads = async (
         const lead = convertRowToLead(row, employeeId);
         leads.push(lead);
       } catch (error) {
-        invalidRows.push(i + 2);
-        console.error(`Error processing row ${i + 2}:`, error);
+        invalidRows.push({
+          row: rowNumber,
+          reason: error || "Invalid data format",
+        });
+        errors.push(`Row ${rowNumber}: ${error}`);
       }
     }
 
@@ -607,6 +623,7 @@ export const processExcelAndCreateLeads = async (
         success: false,
         message: "No valid leads found in the Excel file",
         invalidRows,
+        errors,
       });
     }
 
@@ -636,6 +653,7 @@ export const processExcelAndCreateLeads = async (
         totalRows: data.length,
         successfulRows: leads.length,
         invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
+        errors: errors.length > 0 ? errors : undefined,
       });
     } catch (error) {
       await session.abortTransaction();

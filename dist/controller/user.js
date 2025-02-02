@@ -487,6 +487,12 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const data = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+        if (data.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Excel file is empty",
+            });
+        }
         const firstRow = data[0];
         const missingHeaders = Object.keys(healper_1.headerMapping).filter((header) => !(header in firstRow));
         if (missingHeaders.length > 0) {
@@ -497,10 +503,15 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
         }
         const leads = [];
         const invalidRows = [];
+        const errors = [];
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
+            const rowNumber = i + 2;
             if (!(0, healper_1.validateLeadData)(row)) {
-                invalidRows.push(i + 2);
+                invalidRows.push({
+                    row: rowNumber,
+                    reason: "Missing or invalid data",
+                });
                 continue;
             }
             try {
@@ -508,8 +519,11 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
                 leads.push(lead);
             }
             catch (error) {
-                invalidRows.push(i + 2);
-                console.error(`Error processing row ${i + 2}:`, error);
+                invalidRows.push({
+                    row: rowNumber,
+                    reason: error || "Invalid data format",
+                });
+                errors.push(`Row ${rowNumber}: ${error}`);
             }
         }
         if (leads.length === 0) {
@@ -517,6 +531,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
                 success: false,
                 message: "No valid leads found in the Excel file",
                 invalidRows,
+                errors,
             });
         }
         const session = yield lead_1.default.startSession();
@@ -537,6 +552,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
                 totalRows: data.length,
                 successfulRows: leads.length,
                 invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
+                errors: errors.length > 0 ? errors : undefined,
             });
         }
         catch (error) {
