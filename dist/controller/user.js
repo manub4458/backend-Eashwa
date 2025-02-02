@@ -461,15 +461,14 @@ const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.getVisitors = getVisitors;
 const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fileUrl } = req.body;
+        const { fileUrl, employeeId } = req.body;
         if (!fileUrl) {
             return res.status(400).json({
                 success: false,
                 message: "File URL is required",
             });
         }
-        const { id } = req.params;
-        if (!id) {
+        if (!employeeId) {
             return res.status(400).json({
                 success: false,
                 message: "User ID is required",
@@ -505,7 +504,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
                 continue;
             }
             try {
-                const lead = (0, healper_1.convertRowToLead)(row, id);
+                const lead = (0, healper_1.convertRowToLead)(row, employeeId);
                 leads.push(lead);
             }
             catch (error) {
@@ -524,7 +523,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
         try {
             session.startTransaction();
             const savedLeads = yield lead_1.default.insertMany(leads, { session });
-            yield user_1.default.findByIdAndUpdate(id, {
+            yield user_1.default.findByIdAndUpdate(employeeId, {
                 $push: {
                     leads: {
                         $each: savedLeads.map((lead) => lead._id),
