@@ -9,7 +9,7 @@ router.post("/login", user_1.login);
 router.post("/forgot-password", user_1.forgotPassword);
 router.post("/otp-verify", user_1.verifyOtp);
 router.post("/add-visitor", authMiddleware_1.authenticateToken, user_1.addVisitor);
-router.post("/process-leads/:id", authMiddleware_1.authenticateToken, user_1.processExcelAndCreateLeads);
+router.post("/process-leads", authMiddleware_1.authenticateToken, user_1.processExcelAndCreateLeads);
 router.put("/reset-password", user_1.resetPassword);
 router.put("/update-target/:id", authMiddleware_1.authenticateToken, user_1.updateTarget);
 router.get("/employees", authMiddleware_1.authenticateToken, user_1.getAllEmployees);

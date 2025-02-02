@@ -23,11 +23,7 @@ router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/otp-verify", verifyOtp);
 router.post("/add-visitor", authenticateToken, addVisitor);
-router.post(
-  "/process-leads/:id",
-  authenticateToken,
-  processExcelAndCreateLeads
-);
+router.post("/process-leads", authenticateToken, processExcelAndCreateLeads);
 router.put("/reset-password", resetPassword);
 router.put("/update-target/:id", authenticateToken, updateTarget);
 router.get("/employees", authenticateToken, getAllEmployees);
