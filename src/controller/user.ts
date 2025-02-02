@@ -537,7 +537,7 @@ export const processExcelAndCreateLeads = async (
   res: Response
 ) => {
   try {
-    const { fileUrl } = req.body;
+    const { fileUrl, employeeId } = req.body;
 
     if (!fileUrl) {
       return res.status(400).json({
@@ -546,8 +546,7 @@ export const processExcelAndCreateLeads = async (
       });
     }
 
-    const { id } = req.params;
-    if (!id) {
+    if (!employeeId) {
       return res.status(400).json({
         success: false,
         message: "User ID is required",
@@ -595,7 +594,7 @@ export const processExcelAndCreateLeads = async (
       }
 
       try {
-        const lead = convertRowToLead(row, id);
+        const lead = convertRowToLead(row, employeeId);
         leads.push(lead);
       } catch (error) {
         invalidRows.push(i + 2);
@@ -618,7 +617,7 @@ export const processExcelAndCreateLeads = async (
       const savedLeads = await Lead.insertMany(leads, { session });
 
       await User.findByIdAndUpdate(
-        id,
+        employeeId,
         {
           $push: {
             leads: {
