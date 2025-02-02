@@ -41,7 +41,8 @@ export interface IUser extends Document {
   joiningDate?: string;
   targetAchieved?: ITargetAchieved;
   profilePicture?: string;
-  visitors?: Types.ObjectId[]
+  visitors?: Types.ObjectId[];
+  leads?: Types.ObjectId[]
 }
 
 export interface mUser extends Document {
@@ -53,4 +54,21 @@ export interface mUser extends Document {
   vendorName:string;
   amount:string;
   time:string;
+}
+
+export interface Ilead extends Document {
+  leadDate:Date;
+  callingDate:Date;
+  agentName:string;
+  customerName:string;
+  mobileNumber:string;
+  occupation:string
+  location:string;
+  town:string;
+  state:string;
+  status:string;
+  remark:string;
+  interestedAndNotInterested:string;
+  officeVisitRequired:boolean;
+  leadBy?: Types.ObjectId; 
 }
