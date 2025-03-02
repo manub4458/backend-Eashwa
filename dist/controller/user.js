@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLeads = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
+exports.getLeads = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = require("bcrypt");
 const user_1 = __importDefault(require("../model/user"));
@@ -47,6 +47,7 @@ const lead_1 = __importDefault(require("../model/lead"));
 const XLSX = __importStar(require("xlsx"));
 const axios_1 = __importDefault(require("axios"));
 const mongoose_1 = require("mongoose");
+const leadFile_1 = __importDefault(require("../model/leadFile"));
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post, } = req.body;
@@ -573,6 +574,93 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.processExcelAndCreateLeads = processExcelAndCreateLeads;
+const createLeadsHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { fileUrl } = req.body;
+        if (!fileUrl) {
+            return res
+                .status(400)
+                .json({ success: false, message: "File URL and User ID are required" });
+        }
+        const userId = req.userId;
+        const response = yield axios_1.default.get(fileUrl, { responseType: "arraybuffer" });
+        const buffer = Buffer.from(response.data);
+        const workbook = XLSX.read(buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+        if (data.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "Excel file is empty" });
+        }
+        const leads = [];
+        for (let row of data) {
+            try {
+                const lead = (0, healper_1.convertRowToLead)(row, userId);
+                leads.push(lead);
+            }
+            catch (error) {
+                console.error("Invalid row data:", error);
+            }
+        }
+        if (leads.length === 0) {
+            return res
+                .status(400)
+                .json({ success: false, message: "No valid leads found" });
+        }
+        const session = yield lead_1.default.startSession();
+        try {
+            session.startTransaction();
+            const savedLeads = yield lead_1.default.insertMany(leads, { session });
+            yield user_1.default.findByIdAndUpdate(userId, { $push: { leads: { $each: savedLeads.map((lead) => lead._id) } } }, { session });
+            const fileRecord = new leadFile_1.default({
+                fileUrl,
+                uploadedBy: userId,
+                leadCount: savedLeads.length,
+                leads: savedLeads.map((lead) => lead._id),
+            });
+            yield fileRecord.save({ session });
+            yield session.commitTransaction();
+            return res.status(200).json({
+                success: true,
+                message: `Successfully processed ${leads.length} leads`,
+                fileId: fileRecord._id,
+            });
+        }
+        catch (error) {
+            yield session.abortTransaction();
+            throw error;
+        }
+        finally {
+            session.endSession();
+        }
+    }
+    catch (error) {
+        console.error("Error processing Excel file:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Error processing file", error });
+    }
+});
+exports.createLeadsHistory = createLeadsHistory;
+const getFileUploadHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const files = yield leadFile_1.default.find({ uploadedBy: userId })
+            .sort({ uploadDate: -1 })
+            .select("fileUrl uploadDate leadCount")
+            .lean();
+        return res.status(200).json({ success: true, files });
+    }
+    catch (error) {
+        console.error("Error fetching file history:", error);
+        return res
+            .status(500)
+            .json({ success: false, message: "Error fetching file history" });
+    }
+});
+exports.getFileUploadHistory = getFileUploadHistory;
 const getLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {

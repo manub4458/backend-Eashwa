@@ -15,15 +15,6 @@ const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
         allowed_formats: ["jpg", "jpeg", "png", "gif"],
     },
 });
-// const excelStorage = new CloudinaryStorage({
-//   cloudinary,
-//   params: {
-//     //@ts-ignore
-//     folder: 'excel_files',
-//     allowed_formats: ['xlsx', 'xls'],
-//     resource_type: 'raw'
-//   },
-// })
 const excelStorage = new multer_storage_cloudinary_1.CloudinaryStorage({
     cloudinary: cloudinary_1.default,
     params: {
