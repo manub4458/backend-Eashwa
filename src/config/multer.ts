@@ -11,16 +11,6 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// const excelStorage = new CloudinaryStorage({
-//   cloudinary,
-//   params: {
-//     //@ts-ignore
-//     folder: 'excel_files',
-//     allowed_formats: ['xlsx', 'xls'],
-//     resource_type: 'raw'
-//   },
-// })
-
 const excelStorage = new CloudinaryStorage({
   cloudinary,
   params: {

@@ -15,6 +15,7 @@ import Lead from "../model/lead";
 import * as XLSX from "xlsx";
 import axios from "axios";
 import { Types } from "mongoose";
+import LeadFile from "../model/leadFile";
 
 export const register = async (
   req: Request,
@@ -668,6 +669,106 @@ export const processExcelAndCreateLeads = async (
       message: "Error processing Excel file",
       error: error,
     });
+  }
+};
+
+export const createLeadsHistory = async (req: Request, res: Response) => {
+  try {
+    const { fileUrl } = req.body;
+
+    if (!fileUrl) {
+      return res
+        .status(400)
+        .json({ success: false, message: "File URL and User ID are required" });
+    }
+
+    const userId = (req as any).userId;
+    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+    const buffer = Buffer.from(response.data);
+    const workbook = XLSX.read(buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
+
+    if (data.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Excel file is empty" });
+    }
+
+    const leads = [];
+    for (let row of data) {
+      try {
+        const lead = convertRowToLead(row, userId);
+        leads.push(lead);
+      } catch (error) {
+        console.error("Invalid row data:", error);
+      }
+    }
+
+    if (leads.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No valid leads found" });
+    }
+
+    const session = await Lead.startSession();
+    try {
+      session.startTransaction();
+
+      const savedLeads = await Lead.insertMany(leads, { session });
+
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { leads: { $each: savedLeads.map((lead) => lead._id) } } },
+        { session }
+      );
+
+      const fileRecord = new LeadFile({
+        fileUrl,
+        uploadedBy: userId,
+        leadCount: savedLeads.length,
+        leads: savedLeads.map((lead) => lead._id),
+      });
+
+      await fileRecord.save({ session });
+
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        success: true,
+        message: `Successfully processed ${leads.length} leads`,
+        fileId: fileRecord._id,
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  } catch (error) {
+    console.error("Error processing Excel file:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error processing file", error });
+  }
+};
+
+export const getFileUploadHistory = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).userId;
+
+    const files = await LeadFile.find({ uploadedBy: userId })
+      .sort({ uploadDate: -1 })
+      .select("fileUrl uploadDate leadCount")
+      .lean();
+
+    return res.status(200).json({ success: true, files });
+  } catch (error) {
+    console.error("Error fetching file history:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error fetching file history" });
   }
 };
 
