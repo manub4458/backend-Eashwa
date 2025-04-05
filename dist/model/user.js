@@ -11,6 +11,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
+// Schema for historical target data
+const targetAchievedHistorySchema = new mongoose_1.Schema({
+    month: {
+        type: String, // e.g., "2025-04" (YYYY-MM format)
+        required: true,
+    },
+    total: {
+        type: Number,
+        default: 0,
+    },
+    completed: {
+        type: Number,
+        default: 0,
+    },
+    pending: {
+        type: Number,
+        default: 0,
+    },
+});
+// Existing targetAchievedSchema for current targets (optional)
 const targetAchievedSchema = new mongoose_1.Schema({
     total: {
         type: Number,
@@ -83,16 +103,25 @@ const userSchema = new mongoose_1.Schema({
     },
     targetAchieved: {
         battery: {
-            type: targetAchievedSchema,
-            default: () => ({}),
+            current: {
+                type: targetAchievedSchema, // Current targets (optional)
+                default: () => ({}),
+            },
+            history: [targetAchievedHistorySchema], // Array of monthly records
         },
         eRickshaw: {
-            type: targetAchievedSchema,
-            default: () => ({}),
+            current: {
+                type: targetAchievedSchema,
+                default: () => ({}),
+            },
+            history: [targetAchievedHistorySchema],
         },
         scooty: {
-            type: targetAchievedSchema,
-            default: () => ({}),
+            current: {
+                type: targetAchievedSchema,
+                default: () => ({}),
+            },
+            history: [targetAchievedHistorySchema],
         },
     },
     profilePicture: {
@@ -110,7 +139,7 @@ const userSchema = new mongoose_1.Schema({
             type: mongoose_1.Types.ObjectId,
             ref: "Lead",
         },
-    ]
+    ],
 });
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {

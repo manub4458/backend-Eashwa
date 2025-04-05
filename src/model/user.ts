@@ -2,7 +2,27 @@ import { Schema, model, Types } from "mongoose";
 import { genSaltSync, hashSync } from "bcrypt";
 import { IUser, TargetAchieved } from "../types";
 
+// Schema for historical target data
+const targetAchievedHistorySchema = new Schema({
+  month: {
+    type: String, // e.g., "2025-04" (YYYY-MM format)
+    required: true,
+  },
+  total: {
+    type: Number,
+    default: 0,
+  },
+  completed: {
+    type: Number,
+    default: 0,
+  },
+  pending: {
+    type: Number,
+    default: 0,
+  },
+});
 
+// Existing targetAchievedSchema for current targets (optional)
 const targetAchievedSchema = new Schema<TargetAchieved>({
   total: {
     type: Number,
@@ -76,16 +96,25 @@ const userSchema = new Schema<IUser>({
   },
   targetAchieved: {
     battery: {
-      type: targetAchievedSchema,
-      default: () => ({}),
+      current: {
+        type: targetAchievedSchema, // Current targets (optional)
+        default: () => ({}),
+      },
+      history: [targetAchievedHistorySchema], // Array of monthly records
     },
     eRickshaw: {
-      type: targetAchievedSchema,
-      default: () => ({}),
+      current: {
+        type: targetAchievedSchema,
+        default: () => ({}),
+      },
+      history: [targetAchievedHistorySchema],
     },
     scooty: {
-      type: targetAchievedSchema,
-      default: () => ({}),
+      current: {
+        type: targetAchievedSchema,
+        default: () => ({}),
+      },
+      history: [targetAchievedHistorySchema],
     },
   },
   profilePicture: {
@@ -98,12 +127,12 @@ const userSchema = new Schema<IUser>({
       ref: "Visitor",
     },
   ],
-  leads:[
+  leads: [
     {
       type: Types.ObjectId,
       ref: "Lead",
     },
-  ]
+  ],
 });
 
 userSchema.pre("save", async function (next) {
