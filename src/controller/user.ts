@@ -252,7 +252,7 @@ export const getAllEmployees = async (req: Request, res: Response) => {
 export const updateTarget = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { battery, eRickshaw, scooty } = req.body;
+    const { battery, eRickshaw, scooty, month } = req.body;
 
     const requesterId = (req as any).userId;
     const requester = await User.findById(requesterId);
@@ -300,12 +300,60 @@ export const updateTarget = async (req: Request, res: Response) => {
       };
     };
 
-    user.targetAchieved = {
-      battery: updateField(battery),
-      eRickshaw: updateField(eRickshaw),
-      scooty: updateField(scooty),
+    const updatedTargets = {
+      battery: {
+        total: battery.total,
+        completed: battery.completed,
+        pending: battery.total - battery.completed,
+        current: {
+          ...updateField(battery),
+        },
+        history: user.targetAchieved?.battery?.history || [],
+      },
+      eRickshaw: {
+        total: eRickshaw.total,
+        completed: eRickshaw.completed,
+        pending: eRickshaw.total - eRickshaw.completed,
+        current: {
+          ...updateField(eRickshaw),
+        },
+        history: user.targetAchieved?.eRickshaw?.history ?? [],
+      },
+      scooty: {
+        total: scooty.total,
+        completed: scooty.completed,
+        pending: scooty.total - scooty.completed,
+        current: {
+          ...updateField(scooty),
+        },
+        history: user.targetAchieved?.scooty?.history ?? [],
+      },
     };
 
+    // If `month` is provided, push the current targets to history
+    if (month && typeof month === "string") {
+      const historyEntry = {
+        month,
+        total: updatedTargets.battery.current.total,
+        completed: updatedTargets.battery.current.completed,
+        pending: updatedTargets.battery.current.pending,
+      };
+      updatedTargets.battery.history.push(historyEntry);
+      updatedTargets.eRickshaw.history.push({
+        ...historyEntry,
+        total: updatedTargets.eRickshaw.current.total,
+        completed: updatedTargets.eRickshaw.current.completed,
+        pending: updatedTargets.eRickshaw.current.pending,
+      });
+      updatedTargets.scooty.history.push({
+        ...historyEntry,
+        total: updatedTargets.scooty.current.total,
+        completed: updatedTargets.scooty.current.completed,
+        pending: updatedTargets.scooty.current.pending,
+      });
+    }
+
+    user.targetAchieved = updatedTargets;
     await user.save();
 
     res.status(200).json({
@@ -315,7 +363,7 @@ export const updateTarget = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       message: "An error occurred while updating the target.",
-      error: error,
+      error,
     });
   }
 };

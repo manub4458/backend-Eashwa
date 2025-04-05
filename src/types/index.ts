@@ -6,6 +6,12 @@ export interface TargetAchieved {
   total: number;
   pending: number;
   completed: number;
+  history?: Array<{
+    month: string;
+    total: number;
+    completed: number;
+    pending: number;
+  }>;
 }
 
 export interface ITargetAchieved {
@@ -21,9 +27,8 @@ export interface IVisitor extends Document {
   visitDateTime: Date;
   purpose: string;
   feedback?: string;
-  visitedBy?: Types.ObjectId; 
+  visitedBy?: Types.ObjectId;
 }
-
 
 export interface IUser extends Document {
   name: string;
@@ -42,33 +47,33 @@ export interface IUser extends Document {
   targetAchieved?: ITargetAchieved;
   profilePicture?: string;
   visitors?: Types.ObjectId[];
-  leads?: Types.ObjectId[]
+  leads?: Types.ObjectId[];
 }
 
 export interface mUser extends Document {
   name: string;
-  messageId:string;
-  whatsappNumber:string;
-  secondMessageId:string;
-  productDescription:string;
-  vendorName:string;
-  amount:string;
-  time:string;
+  messageId: string;
+  whatsappNumber: string;
+  secondMessageId: string;
+  productDescription: string;
+  vendorName: string;
+  amount: string;
+  time: string;
 }
 
 export interface Ilead extends Document {
-  leadDate:Date;
-  callingDate:Date;
-  agentName:string;
-  customerName:string;
-  mobileNumber:string;
-  occupation:string
-  location:string;
-  town:string;
-  state:string;
-  status:string;
-  remark:string;
-  interestedAndNotInterested:string;
-  officeVisitRequired:boolean;
-  leadBy?: Types.ObjectId; 
+  leadDate: Date;
+  callingDate: Date;
+  agentName: string;
+  customerName: string;
+  mobileNumber: string;
+  occupation: string;
+  location: string;
+  town: string;
+  state: string;
+  status: string;
+  remark: string;
+  interestedAndNotInterested: string;
+  officeVisitRequired: boolean;
+  leadBy?: Types.ObjectId;
 }
