@@ -35,6 +35,6 @@ router.get("/get-visitor", authenticateToken, getVisitors);
 router.get("/top-employees", getTopEmployees);
 router.get("/leads", authenticateToken, getLeads);
 router.get("/get-file-lead", authenticateToken, getFileUploadHistory);
-router.get("/get-file-lead/:userId", authenticateToken, getFileUploadHistory);
+router.get("/get-file-lead/:id", authenticateToken, getFileUploadHistory);
 
 export default router;
