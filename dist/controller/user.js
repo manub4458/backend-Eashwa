@@ -678,7 +678,9 @@ const createLeadsHistory = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.createLeadsHistory = createLeadsHistory;
 const getFileUploadHistory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const userId = req.userId;
+        const paramUserId = req.query.userId;
+        const authUserId = req.userId;
+        const userId = paramUserId || authUserId;
         const files = yield leadFile_1.default.find({ uploadedBy: userId })
             .sort({ uploadDate: -1 })
             .select("fileUrl uploadDate leadCount")

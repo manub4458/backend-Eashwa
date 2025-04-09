@@ -19,4 +19,5 @@ router.get("/get-visitor", authMiddleware_1.authenticateToken, user_1.getVisitor
 router.get("/top-employees", user_1.getTopEmployees);
 router.get("/leads", authMiddleware_1.authenticateToken, user_1.getLeads);
 router.get("/get-file-lead", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
+router.get("/get-file-lead/:userId", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
 exports.default = router;
