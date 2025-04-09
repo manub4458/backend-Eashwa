@@ -804,7 +804,9 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
 
 export const getFileUploadHistory = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId;
+    const paramUserId = req.query.userId as string;
+    const authUserId = (req as any).userId;
+    const userId = paramUserId || authUserId;
 
     const files = await LeadFile.find({ uploadedBy: userId })
       .sort({ uploadDate: -1 })
