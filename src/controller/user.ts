@@ -804,9 +804,16 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
 
 export const getFileUploadHistory = async (req: Request, res: Response) => {
   try {
-    const paramUserId = req.query.userId as string;
+    const paramId = req.params.id;
     const authUserId = (req as any).userId;
-    const userId = paramUserId || authUserId;
+
+    const userId = paramId ? paramId : authUserId;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User ID is required" });
+    }
 
     const files = await LeadFile.find({ uploadedBy: userId })
       .sort({ uploadDate: -1 })
