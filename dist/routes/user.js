@@ -9,7 +9,9 @@ router.post("/login", user_1.login);
 router.post("/forgot-password", user_1.forgotPassword);
 router.post("/otp-verify", user_1.verifyOtp);
 router.post("/add-visitor", authMiddleware_1.authenticateToken, user_1.addVisitor);
+//admin lead tagret upload
 router.post("/process-leads", authMiddleware_1.authenticateToken, user_1.processExcelAndCreateLeads);
+//user feedbacks upload
 router.post("/upload-file-leads", authMiddleware_1.authenticateToken, user_1.createLeadsHistory);
 router.put("/reset-password", user_1.resetPassword);
 router.put("/update-target/:id", authMiddleware_1.authenticateToken, user_1.updateTarget);
@@ -18,8 +20,10 @@ router.get("/employee-detail/:userId", authMiddleware_1.authenticateToken, user_
 router.get("/get-visitor", authMiddleware_1.authenticateToken, user_1.getVisitors);
 router.get("/top-employees", user_1.getTopEmployees);
 router.get("/leads", authMiddleware_1.authenticateToken, user_1.getLeads);
+//user file lead
 router.get("/get-file-lead", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
 router.get("/get-target-lead", authMiddleware_1.authenticateToken, user_1.getTargetFileUploadHistory);
+//admin file lead
 router.get("/get-file-lead/:id", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
 router.get("/get-target-lead/:id", authMiddleware_1.authenticateToken, user_1.getTargetFileUploadHistory);
 router.delete("/leads/regular-file/:fileId", user_1.deleteRegularLeadFile);

@@ -698,7 +698,7 @@ export const processExcelAndCreateLeads = async (
 
       const targetFileRecord = new TargetLeadFile({
         fileUrl,
-        uploadedBy: userId,
+        uploadedBy: employeeId,
         leadCount: savedLeads.length,
         leads: savedLeads.map((lead) => lead._id),
       });

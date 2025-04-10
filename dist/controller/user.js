@@ -566,7 +566,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
             yield user_1.default.findByIdAndUpdate(employeeId, { $push: { leads: { $each: savedLeads.map((lead) => lead._id) } } }, { session });
             const targetFileRecord = new targetLeadFile_1.default({
                 fileUrl,
-                uploadedBy: userId,
+                uploadedBy: employeeId,
                 leadCount: savedLeads.length,
                 leads: savedLeads.map((lead) => lead._id),
             });
