@@ -26,6 +26,6 @@ router.get("/get-target-lead", authMiddleware_1.authenticateToken, user_1.getTar
 //admin file lead
 router.get("/get-file-lead/:id", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
 router.get("/get-target-lead/:id", authMiddleware_1.authenticateToken, user_1.getTargetFileUploadHistory);
-router.delete("/leads/regular-file/:fileId", user_1.deleteRegularLeadFile);
-router.delete("/leads/target-file/:fileId", user_1.deleteTargetLeadFile);
+router.delete("/leads/regular-file/:fileId", authMiddleware_1.authenticateToken, user_1.deleteRegularLeadFile);
+router.delete("/leads/target-file/:fileId", authMiddleware_1.authenticateToken, user_1.deleteTargetLeadFile);
 exports.default = router;

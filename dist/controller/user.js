@@ -783,8 +783,10 @@ const getLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getLeads = getLeads;
 const deleteRegularLeadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const fileId = req.params.fileId; // File ID from URL parameter
-        const authUserId = req.userId; // From auth middleware
+        const fileId = req.params.fileId;
+        const { requestId } = req.body;
+        const id = req.userId;
+        const authUserId = requestId ? requestId : id;
         if (!fileId) {
             return res
                 .status(400)
@@ -840,7 +842,9 @@ exports.deleteRegularLeadFile = deleteRegularLeadFile;
 const deleteTargetLeadFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const fileId = req.params.fileId;
-        const authUserId = req.userId;
+        const { requestId } = req.body;
+        const id = req.userId;
+        const authUserId = requestId ? requestId : id;
         if (!fileId) {
             return res
                 .status(400)

@@ -937,8 +937,11 @@ export const getLeads = async (req: Request, res: Response) => {
 
 export const deleteRegularLeadFile = async (req: Request, res: Response) => {
   try {
-    const fileId = req.params.fileId; // File ID from URL parameter
-    const authUserId = (req as any).userId; // From auth middleware
+    const fileId = req.params.fileId;
+    const { requestId } = req.body;
+    const id = (req as any).userId;
+
+    const authUserId = requestId ? requestId : id;
 
     if (!fileId) {
       return res
@@ -1005,7 +1008,10 @@ export const deleteRegularLeadFile = async (req: Request, res: Response) => {
 export const deleteTargetLeadFile = async (req: Request, res: Response) => {
   try {
     const fileId = req.params.fileId;
-    const authUserId = (req as any).userId;
+    const { requestId } = req.body;
+    const id = (req as any).userId;
+
+    const authUserId = requestId ? requestId : id;
 
     if (!fileId) {
       return res

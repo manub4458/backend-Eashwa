@@ -50,7 +50,15 @@ router.get(
   getTargetFileUploadHistory
 );
 
-router.delete("/leads/regular-file/:fileId", deleteRegularLeadFile);
-router.delete("/leads/target-file/:fileId", deleteTargetLeadFile);
+router.delete(
+  "/leads/regular-file/:fileId",
+  authenticateToken,
+  deleteRegularLeadFile
+);
+router.delete(
+  "/leads/target-file/:fileId",
+  authenticateToken,
+  deleteTargetLeadFile
+);
 
 export default router;
