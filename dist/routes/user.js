@@ -19,5 +19,9 @@ router.get("/get-visitor", authMiddleware_1.authenticateToken, user_1.getVisitor
 router.get("/top-employees", user_1.getTopEmployees);
 router.get("/leads", authMiddleware_1.authenticateToken, user_1.getLeads);
 router.get("/get-file-lead", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
+router.get("/get-target-lead", authMiddleware_1.authenticateToken, user_1.getTargetFileUploadHistory);
 router.get("/get-file-lead/:id", authMiddleware_1.authenticateToken, user_1.getFileUploadHistory);
+router.get("/get-target-lead/:id", authMiddleware_1.authenticateToken, user_1.getTargetFileUploadHistory);
+router.delete("/leads/regular-file/:fileId", user_1.deleteRegularLeadFile);
+router.delete("/leads/target-file/:fileId", user_1.deleteTargetLeadFile);
 exports.default = router;

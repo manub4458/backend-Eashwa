@@ -59,6 +59,7 @@ const convertRowToLead = (row, userId) => {
             row["Office Visit Required"] === true ||
             row["Office Visit Required"] === 1,
         leadBy: new mongoose_1.Types.ObjectId(userId),
+        isTargetLead: false,
     };
 };
 exports.convertRowToLead = convertRowToLead;

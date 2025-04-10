@@ -48,6 +48,10 @@ export interface IUser extends Document {
   profilePicture?: string;
   visitors?: Types.ObjectId[];
   leads?: Types.ObjectId[];
+  targetLeads: {
+    type: typeof Types.ObjectId;
+    ref: string;
+  }[];
 }
 
 export interface mUser extends Document {
@@ -76,4 +80,26 @@ export interface Ilead extends Document {
   interestedAndNotInterested: string;
   officeVisitRequired: boolean;
   leadBy?: Types.ObjectId;
+  isTargetLead: {
+    type: BooleanConstructor;
+    default: false;
+  };
+}
+
+export interface LeadType extends Document {
+  leadDate: Date;
+  callingDate: Date;
+  agentName: string;
+  customerName: string;
+  mobileNumber: string;
+  occupation: string;
+  location: string;
+  town: string;
+  state: string;
+  status: string;
+  remark: string;
+  interestedAndNotInterested: string;
+  officeVisitRequired: boolean;
+  leadBy: Types.ObjectId;
+  isTargetLead?: boolean;
 }

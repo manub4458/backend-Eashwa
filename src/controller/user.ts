@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import jwt from "jsonwebtoken";
 import { compareSync } from "bcrypt";
+
 import User from "../model/user";
 import { authenticator } from "otplib";
 import { sendMail } from "../utils/emailer";
@@ -16,6 +17,25 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import { Types } from "mongoose";
 import LeadFile from "../model/leadFile";
+import TargetLeadFile from "../model/targetLeadFile";
+
+interface LeadType {
+  leadDate: Date;
+  callingDate: Date;
+  agentName: string;
+  customerName: string;
+  mobileNumber: string;
+  occupation: string;
+  location: string;
+  town: string;
+  state: string;
+  status: string;
+  remark: string;
+  interestedAndNotInterested: string;
+  officeVisitRequired: boolean;
+  leadBy: Types.ObjectId;
+  isTargetLead?: boolean;
+}
 
 export const register = async (
   req: Request,
@@ -588,17 +608,10 @@ export const processExcelAndCreateLeads = async (
   try {
     const { fileUrl, employeeId } = req.body;
 
-    if (!fileUrl) {
+    if (!fileUrl || !employeeId) {
       return res.status(400).json({
         success: false,
-        message: "File URL is required",
-      });
-    }
-
-    if (!employeeId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required",
+        message: "File URL and Employee ID are required",
       });
     }
 
@@ -607,30 +620,27 @@ export const processExcelAndCreateLeads = async (
 
     if (!requester || !["hr", "admin"].includes(requester.role)) {
       return res.status(403).json({
-        message: "Access denied. Only HR and admin can add leads.",
+        message: "Access denied. Only HR and admin can add target leads.",
       });
     }
 
     const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
     const buffer = Buffer.from(response.data);
-
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const data: any[] = XLSX.utils.sheet_to_json(worksheet, { raw: false });
 
     if (data.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Excel file is empty",
-      });
+      return res
+        .status(400)
+        .json({ success: false, message: "Excel file is empty" });
     }
 
     const firstRow = data[0];
     const missingHeaders = Object.keys(headerMapping).filter(
       (header) => !(header in firstRow)
     );
-
     if (missingHeaders.length > 0) {
       return res.status(400).json({
         success: false,
@@ -639,7 +649,7 @@ export const processExcelAndCreateLeads = async (
       });
     }
 
-    const leads = [];
+    const leads: LeadType[] = [];
     const invalidRows = [];
     const errors = [];
 
@@ -648,15 +658,13 @@ export const processExcelAndCreateLeads = async (
       const rowNumber = i + 2;
 
       if (!validateLeadData(row)) {
-        invalidRows.push({
-          row: rowNumber,
-          reason: "Missing or invalid data",
-        });
+        invalidRows.push({ row: rowNumber, reason: "Missing or invalid data" });
         continue;
       }
 
       try {
         const lead = convertRowToLead(row, employeeId);
+        lead.isTargetLead = true;
         leads.push(lead);
       } catch (error) {
         invalidRows.push({
@@ -670,7 +678,7 @@ export const processExcelAndCreateLeads = async (
     if (leads.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No valid leads found in the Excel file",
+        message: "No valid target leads found in the Excel file",
         invalidRows,
         errors,
       });
@@ -684,25 +692,28 @@ export const processExcelAndCreateLeads = async (
 
       await User.findByIdAndUpdate(
         employeeId,
-        {
-          $push: {
-            leads: {
-              $each: savedLeads.map((lead) => lead._id),
-            },
-          },
-        },
+        { $push: { leads: { $each: savedLeads.map((lead) => lead._id) } } },
         { session }
       );
+
+      const targetFileRecord = new TargetLeadFile({
+        fileUrl,
+        uploadedBy: userId,
+        leadCount: savedLeads.length,
+        leads: savedLeads.map((lead) => lead._id),
+      });
+      await targetFileRecord.save({ session });
 
       await session.commitTransaction();
 
       return res.status(200).json({
         success: true,
-        message: `Successfully processed ${leads.length} leads`,
+        message: `Successfully processed ${leads.length} target leads`,
         totalRows: data.length,
         successfulRows: leads.length,
         invalidRows: invalidRows.length > 0 ? invalidRows : undefined,
         errors: errors.length > 0 ? errors : undefined,
+        targetFileId: targetFileRecord._id,
       });
     } catch (error) {
       await session.abortTransaction();
@@ -715,7 +726,7 @@ export const processExcelAndCreateLeads = async (
     return res.status(500).json({
       success: false,
       message: "Error processing Excel file",
-      error: error,
+      error,
     });
   }
 };
@@ -725,9 +736,10 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
     const { fileUrl } = req.body;
 
     if (!fileUrl) {
-      return res
-        .status(400)
-        .json({ success: false, message: "File URL and User ID are required" });
+      return res.status(400).json({
+        success: false,
+        message: "File URL is required",
+      });
     }
 
     const userId = (req as any).userId;
@@ -748,6 +760,7 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
     for (let row of data) {
       try {
         const lead = convertRowToLead(row, userId);
+        // isTargetLead defaults to false, no need to set explicitly
         leads.push(lead);
       } catch (error) {
         console.error("Invalid row data:", error);
@@ -778,7 +791,6 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
         leadCount: savedLeads.length,
         leads: savedLeads.map((lead) => lead._id),
       });
-
       await fileRecord.save({ session });
 
       await session.commitTransaction();
@@ -796,9 +808,11 @@ export const createLeadsHistory = async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.error("Error processing Excel file:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Error processing file", error });
+    return res.status(500).json({
+      success: false,
+      message: "Error processing file",
+      error,
+    });
   }
 };
 
@@ -826,6 +840,36 @@ export const getFileUploadHistory = async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ success: false, message: "Error fetching file history" });
+  }
+};
+
+export const getTargetFileUploadHistory = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const paramId = req.params.id;
+    const authUserId = (req as any).userId;
+
+    const userId = paramId ? paramId : authUserId;
+
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    const files = await TargetLeadFile.find({ uploadedBy: userId })
+      .sort({ uploadDate: -1 })
+      .select("fileUrl uploadDate leadCount")
+      .lean();
+
+    return res.status(200).json({ success: true, files });
+  } catch (error) {
+    console.error("Error fetching target file history:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error fetching target file history" });
   }
 };
 
@@ -888,5 +932,140 @@ export const getLeads = async (req: Request, res: Response) => {
       message: "Error fetching leads",
       error: error,
     });
+  }
+};
+
+export const deleteRegularLeadFile = async (req: Request, res: Response) => {
+  try {
+    const fileId = req.params.fileId; // File ID from URL parameter
+    const authUserId = (req as any).userId; // From auth middleware
+
+    if (!fileId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "File ID is required" });
+    }
+
+    if (!authUserId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    // Find the file and ensure it belongs to the user
+    const file = await LeadFile.findOne({
+      _id: fileId,
+      uploadedBy: authUserId,
+    });
+
+    if (!file) {
+      return res.status(404).json({
+        success: false,
+        message: "File not found or you don’t have permission to delete it",
+      });
+    }
+
+    const session = await Lead.startSession();
+    try {
+      session.startTransaction();
+
+      // Optional: Delete associated leads (if you want to cascade delete)
+      await Lead.deleteMany({ _id: { $in: file.leads } }, { session });
+
+      // Remove lead references from the user's leads array
+      await User.updateOne(
+        { _id: authUserId },
+        { $pull: { leads: { $in: file.leads } } },
+        { session }
+      );
+
+      // Delete the file record
+      await LeadFile.deleteOne({ _id: fileId }, { session });
+
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        success: true,
+        message: "Regular lead file deleted successfully",
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  } catch (error) {
+    console.error("Error deleting regular lead file:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error deleting regular lead file" });
+  }
+};
+
+export const deleteTargetLeadFile = async (req: Request, res: Response) => {
+  try {
+    const fileId = req.params.fileId;
+    const authUserId = (req as any).userId;
+
+    if (!fileId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "File ID is required" });
+    }
+
+    if (!authUserId) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    // Find the file and ensure it belongs to the user
+    const file = await TargetLeadFile.findOne({
+      _id: fileId,
+      uploadedBy: authUserId,
+    });
+
+    if (!file) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Target file not found or you don’t have permission to delete it",
+      });
+    }
+
+    const session = await Lead.startSession();
+    try {
+      session.startTransaction();
+
+      // Optional: Delete associated leads (if you want to cascade delete)
+      await Lead.deleteMany({ _id: { $in: file.leads } }, { session });
+
+      // Remove lead references from the user's leads array
+      await User.updateOne(
+        { _id: authUserId },
+        { $pull: { leads: { $in: file.leads } } },
+        { session }
+      );
+
+      // Delete the file record
+      await TargetLeadFile.deleteOne({ _id: fileId }, { session });
+
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        success: true,
+        message: "Target lead file deleted successfully",
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  } catch (error) {
+    console.error("Error deleting target lead file:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Error deleting target lead file" });
   }
 };
