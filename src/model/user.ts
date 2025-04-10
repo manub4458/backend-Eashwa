@@ -97,10 +97,10 @@ const userSchema = new Schema<IUser>({
   targetAchieved: {
     battery: {
       current: {
-        type: targetAchievedSchema, // Current targets (optional)
+        type: targetAchievedSchema,
         default: () => ({}),
       },
-      history: [targetAchievedHistorySchema], // Array of monthly records
+      history: [targetAchievedHistorySchema],
     },
     eRickshaw: {
       current: {
@@ -133,6 +133,7 @@ const userSchema = new Schema<IUser>({
       ref: "Lead",
     },
   ],
+  targetLeads: [{ type: Types.ObjectId, ref: "Lead" }],
 });
 
 userSchema.pre("save", async function (next) {

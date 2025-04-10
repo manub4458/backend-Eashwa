@@ -15,6 +15,9 @@ import {
   getLeads,
   createLeadsHistory,
   getFileUploadHistory,
+  getTargetFileUploadHistory,
+  deleteRegularLeadFile,
+  deleteTargetLeadFile,
 } from "../controller/user";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -35,6 +38,15 @@ router.get("/get-visitor", authenticateToken, getVisitors);
 router.get("/top-employees", getTopEmployees);
 router.get("/leads", authenticateToken, getLeads);
 router.get("/get-file-lead", authenticateToken, getFileUploadHistory);
+router.get("/get-target-lead", authenticateToken, getTargetFileUploadHistory);
 router.get("/get-file-lead/:id", authenticateToken, getFileUploadHistory);
+router.get(
+  "/get-target-lead/:id",
+  authenticateToken,
+  getTargetFileUploadHistory
+);
+
+router.delete("/leads/regular-file/:fileId", deleteRegularLeadFile);
+router.delete("/leads/target-file/:fileId", deleteTargetLeadFile);
 
 export default router;
