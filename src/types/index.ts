@@ -14,6 +14,21 @@ export interface TargetAchieved {
   }>;
 }
 
+export interface TargetAchievedHistory {
+  month: string;
+  total: number;
+  completed: number;
+  pending: number;
+}
+
+export interface RatingHistory {
+  month: string;
+  managerRating?: number;
+  adminRating?: number;
+  managerId?: Types.ObjectId;
+  adminId?: Types.ObjectId;
+}
+
 export interface ITargetAchieved {
   battery?: TargetAchieved;
   eRickshaw?: TargetAchieved;
@@ -52,6 +67,12 @@ export interface IUser extends Document {
     type: typeof Types.ObjectId;
     ref: string;
   }[];
+  manages: Types.ObjectId[];
+  managedBy?: Types.ObjectId;
+  ratings: {
+    current: number;
+    history: RatingHistory[];
+  };
 }
 
 export interface mUser extends Document {

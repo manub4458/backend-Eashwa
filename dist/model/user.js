@@ -8,43 +8,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
-// Schema for historical target data
-const targetAchievedHistorySchema = new mongoose_1.Schema({
-    month: {
-        type: String, // e.g., "2025-04" (YYYY-MM format)
-        required: true,
-    },
-    total: {
-        type: Number,
-        default: 0,
-    },
-    completed: {
-        type: Number,
-        default: 0,
-    },
-    pending: {
-        type: Number,
-        default: 0,
-    },
-});
-// Existing targetAchievedSchema for current targets (optional)
-const targetAchievedSchema = new mongoose_1.Schema({
-    total: {
-        type: Number,
-        default: 0,
-    },
-    pending: {
-        type: Number,
-        default: 0,
-    },
-    completed: {
-        type: Number,
-        default: 0,
-    },
-});
+const targetAchievedHistory_1 = __importDefault(require("./targetAchievedHistory"));
+const ratingHistory_1 = __importDefault(require("./ratingHistory"));
+const userTargetAchieved_1 = __importDefault(require("./userTargetAchieved"));
 const userSchema = new mongoose_1.Schema({
     name: {
         type: String,
@@ -85,7 +57,7 @@ const userSchema = new mongoose_1.Schema({
     },
     role: {
         type: String,
-        enum: ["admin", "employee", "hr"],
+        enum: ["admin", "employee", "hr", "manager"],
         default: "employee",
         required: true,
     },
@@ -104,24 +76,24 @@ const userSchema = new mongoose_1.Schema({
     targetAchieved: {
         battery: {
             current: {
-                type: targetAchievedSchema,
+                type: userTargetAchieved_1.default,
                 default: () => ({}),
             },
-            history: [targetAchievedHistorySchema],
+            history: [targetAchievedHistory_1.default],
         },
         eRickshaw: {
             current: {
-                type: targetAchievedSchema,
+                type: userTargetAchieved_1.default,
                 default: () => ({}),
             },
-            history: [targetAchievedHistorySchema],
+            history: [targetAchievedHistory_1.default],
         },
         scooty: {
             current: {
-                type: targetAchievedSchema,
+                type: userTargetAchieved_1.default,
                 default: () => ({}),
             },
-            history: [targetAchievedHistorySchema],
+            history: [targetAchievedHistory_1.default],
         },
     },
     profilePicture: {
@@ -141,6 +113,24 @@ const userSchema = new mongoose_1.Schema({
         },
     ],
     targetLeads: [{ type: mongoose_1.Types.ObjectId, ref: "Lead" }],
+    manages: [
+        {
+            type: mongoose_1.Types.ObjectId,
+            ref: "User",
+        },
+    ],
+    managedBy: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "User",
+        default: null,
+    },
+    ratings: {
+        current: {
+            type: Number,
+            default: 0,
+        },
+        history: [ratingHistory_1.default],
+    },
 });
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -157,6 +147,19 @@ userSchema.pre("save", function (next) {
         }
         next();
     });
+});
+userSchema.pre("save", function (next) {
+    const user = this;
+    if (user.isModified("ratings.history")) {
+        const ratings = user.ratings.history
+            .flatMap((entry) => [entry.managerRating, entry.adminRating])
+            .filter((rating) => typeof rating === "number");
+        user.ratings.current =
+            ratings.length > 0
+                ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+                : 0;
+    }
+    next();
 });
 const User = (0, mongoose_1.model)("User", userSchema);
 exports.default = User;

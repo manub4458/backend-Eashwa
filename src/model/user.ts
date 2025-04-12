@@ -1,42 +1,9 @@
 import { Schema, model, Types } from "mongoose";
 import { genSaltSync, hashSync } from "bcrypt";
-import { IUser, TargetAchieved } from "../types";
-
-// Schema for historical target data
-const targetAchievedHistorySchema = new Schema({
-  month: {
-    type: String, // e.g., "2025-04" (YYYY-MM format)
-    required: true,
-  },
-  total: {
-    type: Number,
-    default: 0,
-  },
-  completed: {
-    type: Number,
-    default: 0,
-  },
-  pending: {
-    type: Number,
-    default: 0,
-  },
-});
-
-// Existing targetAchievedSchema for current targets (optional)
-const targetAchievedSchema = new Schema<TargetAchieved>({
-  total: {
-    type: Number,
-    default: 0,
-  },
-  pending: {
-    type: Number,
-    default: 0,
-  },
-  completed: {
-    type: Number,
-    default: 0,
-  },
-});
+import { IUser } from "../types";
+import targetAchievedHistorySchema from "./targetAchievedHistory";
+import ratingHistorySchema from "./ratingHistory";
+import targetAchievedSchema from "./userTargetAchieved";
 
 const userSchema = new Schema<IUser>({
   name: {
@@ -78,7 +45,7 @@ const userSchema = new Schema<IUser>({
   },
   role: {
     type: String,
-    enum: ["admin", "employee", "hr"],
+    enum: ["admin", "employee", "hr", "manager"],
     default: "employee",
     required: true,
   },
@@ -134,6 +101,24 @@ const userSchema = new Schema<IUser>({
     },
   ],
   targetLeads: [{ type: Types.ObjectId, ref: "Lead" }],
+  manages: [
+    {
+      type: Types.ObjectId,
+      ref: "User",
+    },
+  ],
+  managedBy: {
+    type: Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  ratings: {
+    current: {
+      type: Number,
+      default: 0,
+    },
+    history: [ratingHistorySchema],
+  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -147,6 +132,20 @@ userSchema.pre("save", async function (next) {
   }
   if (user.isModified("passwordResetToken")) {
     user.passwordResetToken = hashSync(user.passwordResetToken, salt);
+  }
+  next();
+});
+
+userSchema.pre("save", function (next) {
+  const user = this;
+  if (user.isModified("ratings.history")) {
+    const ratings = user.ratings.history
+      .flatMap((entry) => [entry.managerRating, entry.adminRating])
+      .filter((rating): rating is number => typeof rating === "number");
+    user.ratings.current =
+      ratings.length > 0
+        ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+        : 0;
   }
   next();
 });

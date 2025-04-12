@@ -1,23 +1,23 @@
 import { Request, Response, NextFunction, RequestHandler } from "express";
-import jwt from "jsonwebtoken";
+import { Types } from "mongoose";
 import { compareSync } from "bcrypt";
+import jwt from "jsonwebtoken";
+import axios from "axios";
+import * as XLSX from "xlsx";
 
 import User from "../model/user";
+import Lead from "../model/lead";
+import LeadFile from "../model/leadFile";
+import TargetLeadFile from "../model/targetLeadFile";
+import Visitor from "../model/visitor";
 import { authenticator } from "otplib";
 import { sendMail } from "../utils/emailer";
 import { TargetAchieved } from "../types";
-import Visitor from "../model/visitor";
 import {
   convertRowToLead,
   headerMapping,
   validateLeadData,
 } from "../utils/healper";
-import Lead from "../model/lead";
-import * as XLSX from "xlsx";
-import axios from "axios";
-import { Types } from "mongoose";
-import LeadFile from "../model/leadFile";
-import TargetLeadFile from "../model/targetLeadFile";
 
 interface LeadType {
   leadDate: Date;
@@ -151,6 +151,91 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({
       message: "Something went wrong",
     });
+  }
+};
+
+export const updateEmployee = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body };
+
+    delete updateData.password;
+
+    // Find the user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (
+      updateData.ratings?.history &&
+      Array.isArray(updateData.ratings.history)
+    ) {
+      updateData.ratings.history.forEach((newEntry: any) => {
+        const { month, managerRating, adminRating, managerId, adminId } =
+          newEntry;
+        if (month) {
+          const existingEntry = user.ratings.history.find(
+            (entry) => entry.month === month
+          );
+
+          if (existingEntry) {
+            if (managerRating !== undefined)
+              existingEntry.managerRating = managerRating;
+            if (adminRating !== undefined)
+              existingEntry.adminRating = adminRating;
+            if (managerId !== undefined) existingEntry.managerId = managerId;
+            if (adminId !== undefined) existingEntry.adminId = adminId;
+          } else {
+            user.ratings.history.push({
+              month,
+              managerRating: managerRating ?? null,
+              adminRating: adminRating ?? null,
+              managerId: managerId ?? null,
+              adminId: adminId ?? null,
+            });
+          }
+        }
+      });
+
+      delete updateData.ratings;
+    }
+
+    Object.assign(user, updateData);
+    const updatedUser = await user.save();
+    const responseUser = updatedUser.toObject();
+    // delete responseUser.password;
+    // delete responseUser.passwordResetToken;
+
+    res.status(200).json(responseUser);
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getManagedEmployees = async (req: Request, res: Response) => {
+  try {
+    const id = (req as any).userId;
+
+    const managedEmployees = await User.find({ managedBy: id })
+      .select("-password -passwordResetToken")
+      .lean();
+
+    if (!managedEmployees || managedEmployees.length === 0) {
+      return res.status(200).json({
+        message: "No employees managed by this user",
+        employees: [],
+      });
+    }
+
+    res.status(200).json({
+      message: "Managed employees retrieved successfully",
+      employees: managedEmployees,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
