@@ -316,7 +316,7 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const { battery, eRickshaw, scooty, month } = req.body;
         const requesterId = req.userId;
         const requester = yield user_1.default.findById(requesterId);
-        if (!requester || !["hr", "admin"].includes(requester.role)) {
+        if (!requester || !["hr", "admin", "manager"].includes(requester.role)) {
             return res.status(403).json({
                 message: "Access denied. Only HR and admin can update targets.",
             });
@@ -437,7 +437,8 @@ exports.getTopEmployees = getTopEmployees;
 const getEmployeeDetails = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const requestingUser = yield user_1.default.findById(req.userId);
-        if (!requestingUser || !["hr", "admin"].includes(requestingUser.role)) {
+        if (!requestingUser ||
+            !["hr", "admin", "manager"].includes(requestingUser.role)) {
             return res
                 .status(403)
                 .json({ message: "Forbidden: Insufficient permissions" });
@@ -582,7 +583,7 @@ const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 
         }
         const userId = req.userId;
         const requester = yield user_1.default.findById(userId);
-        if (!requester || !["hr", "admin"].includes(requester.role)) {
+        if (!requester || !["hr", "admin", "manager"].includes(requester.role)) {
             return res.status(403).json({
                 message: "Access denied. Only HR and admin can add target leads.",
             });

@@ -364,7 +364,7 @@ export const updateTarget = async (req: Request, res: Response) => {
 
     const requesterId = (req as any).userId;
     const requester = await User.findById(requesterId);
-    if (!requester || !["hr", "admin"].includes(requester.role)) {
+    if (!requester || !["hr", "admin", "manager"].includes(requester.role)) {
       return res.status(403).json({
         message: "Access denied. Only HR and admin can update targets.",
       });
@@ -529,7 +529,10 @@ export const getEmployeeDetails = async (req: Request, res: Response) => {
   try {
     const requestingUser = await User.findById((req as any).userId);
 
-    if (!requestingUser || !["hr", "admin"].includes(requestingUser.role)) {
+    if (
+      !requestingUser ||
+      !["hr", "admin", "manager"].includes(requestingUser.role)
+    ) {
       return res
         .status(403)
         .json({ message: "Forbidden: Insufficient permissions" });
@@ -706,7 +709,7 @@ export const processExcelAndCreateLeads = async (
     const userId = (req as any).userId;
     const requester = await User.findById(userId);
 
-    if (!requester || !["hr", "admin"].includes(requester.role)) {
+    if (!requester || !["hr", "admin", "manager"].includes(requester.role)) {
       return res.status(403).json({
         message: "Access denied. Only HR and admin can add target leads.",
       });
