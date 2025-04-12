@@ -35,20 +35,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.login = exports.register = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const bcrypt_1 = require("bcrypt");
-const user_1 = __importDefault(require("../model/user"));
-const otplib_1 = require("otplib");
-const emailer_1 = require("../utils/emailer");
-const visitor_1 = __importDefault(require("../model/visitor"));
-const healper_1 = require("../utils/healper");
-const lead_1 = __importDefault(require("../model/lead"));
-const XLSX = __importStar(require("xlsx"));
-const axios_1 = __importDefault(require("axios"));
+exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
 const mongoose_1 = require("mongoose");
+const bcrypt_1 = require("bcrypt");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const axios_1 = __importDefault(require("axios"));
+const XLSX = __importStar(require("xlsx"));
+const user_1 = __importDefault(require("../model/user"));
+const lead_1 = __importDefault(require("../model/lead"));
 const leadFile_1 = __importDefault(require("../model/leadFile"));
 const targetLeadFile_1 = __importDefault(require("../model/targetLeadFile"));
+const visitor_1 = __importDefault(require("../model/visitor"));
+const otplib_1 = require("otplib");
+const emailer_1 = require("../utils/emailer");
+const healper_1 = require("../utils/healper");
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post, } = req.body;
@@ -133,6 +133,82 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.login = login;
+const updateEmployee = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { id } = req.params;
+        const updateData = Object.assign({}, req.body);
+        delete updateData.password;
+        // Find the user
+        const user = yield user_1.default.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (((_a = updateData.ratings) === null || _a === void 0 ? void 0 : _a.history) &&
+            Array.isArray(updateData.ratings.history)) {
+            updateData.ratings.history.forEach((newEntry) => {
+                const { month, managerRating, adminRating, managerId, adminId } = newEntry;
+                if (month) {
+                    const existingEntry = user.ratings.history.find((entry) => entry.month === month);
+                    if (existingEntry) {
+                        if (managerRating !== undefined)
+                            existingEntry.managerRating = managerRating;
+                        if (adminRating !== undefined)
+                            existingEntry.adminRating = adminRating;
+                        if (managerId !== undefined)
+                            existingEntry.managerId = managerId;
+                        if (adminId !== undefined)
+                            existingEntry.adminId = adminId;
+                    }
+                    else {
+                        user.ratings.history.push({
+                            month,
+                            managerRating: managerRating !== null && managerRating !== void 0 ? managerRating : null,
+                            adminRating: adminRating !== null && adminRating !== void 0 ? adminRating : null,
+                            managerId: managerId !== null && managerId !== void 0 ? managerId : null,
+                            adminId: adminId !== null && adminId !== void 0 ? adminId : null,
+                        });
+                    }
+                }
+            });
+            delete updateData.ratings;
+        }
+        Object.assign(user, updateData);
+        const updatedUser = yield user.save();
+        const responseUser = updatedUser.toObject();
+        // delete responseUser.password;
+        // delete responseUser.passwordResetToken;
+        res.status(200).json(responseUser);
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+exports.updateEmployee = updateEmployee;
+const getManagedEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = req.userId;
+        const managedEmployees = yield user_1.default.find({ managedBy: id })
+            .select("-password -passwordResetToken")
+            .lean();
+        if (!managedEmployees || managedEmployees.length === 0) {
+            return res.status(200).json({
+                message: "No employees managed by this user",
+                employees: [],
+            });
+        }
+        res.status(200).json({
+            message: "Managed employees retrieved successfully",
+            employees: managedEmployees,
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+exports.getManagedEmployees = getManagedEmployees;
 const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;

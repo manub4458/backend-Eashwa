@@ -18,6 +18,8 @@ import {
   getTargetFileUploadHistory,
   deleteRegularLeadFile,
   deleteTargetLeadFile,
+  updateEmployee,
+  getManagedEmployees,
 } from "../controller/user";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -32,9 +34,11 @@ router.post("/add-visitor", authenticateToken, addVisitor);
 router.post("/process-leads", authenticateToken, processExcelAndCreateLeads);
 //user feedbacks upload
 router.post("/upload-file-leads", authenticateToken, createLeadsHistory);
+router.patch("/update-employee/:id", authenticateToken, updateEmployee);
 router.put("/reset-password", resetPassword);
 router.put("/update-target/:id", authenticateToken, updateTarget);
 router.get("/employees", authenticateToken, getAllEmployees);
+router.get("/managed-employees", authenticateToken, getManagedEmployees);
 router.get("/employee-detail/:userId", authenticateToken, getEmployeeDetails);
 router.get("/get-visitor", authenticateToken, getVisitors);
 router.get("/top-employees", getTopEmployees);
