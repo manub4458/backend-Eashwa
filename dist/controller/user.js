@@ -188,8 +188,10 @@ const updateEmployee = (req, res) => __awaiter(void 0, void 0, void 0, function*
 exports.updateEmployee = updateEmployee;
 const getManagedEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const id = req.userId;
-        const managedEmployees = yield user_1.default.find({ managedBy: id })
+        const paramId = req.params.id;
+        const authUserId = req.userId;
+        const userId = paramId ? paramId : authUserId;
+        const managedEmployees = yield user_1.default.find({ managedBy: userId })
             .select("-password -passwordResetToken")
             .lean();
         if (!managedEmployees || managedEmployees.length === 0) {

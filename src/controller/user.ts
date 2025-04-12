@@ -216,9 +216,12 @@ export const updateEmployee = async (req: Request, res: Response) => {
 
 export const getManagedEmployees = async (req: Request, res: Response) => {
   try {
-    const id = (req as any).userId;
+    const paramId = req.params.id;
+    const authUserId = (req as any).userId;
 
-    const managedEmployees = await User.find({ managedBy: id })
+    const userId = paramId ? paramId : authUserId;
+
+    const managedEmployees = await User.find({ managedBy: userId })
       .select("-password -passwordResetToken")
       .lean();
 
