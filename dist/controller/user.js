@@ -293,7 +293,7 @@ const getAllEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (!user) {
             return res.status(403).json({ message: "Forbidden: User not found" });
         }
-        if (!["hr", "admin"].includes(user.role)) {
+        if (!["hr", "admin", "manager"].includes(user.role)) {
             return res
                 .status(403)
                 .json({ message: "Forbidden: Insufficient permissions" });
