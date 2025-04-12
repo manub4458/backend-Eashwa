@@ -38,7 +38,12 @@ router.patch("/update-employee/:id", authenticateToken, updateEmployee);
 router.put("/reset-password", resetPassword);
 router.put("/update-target/:id", authenticateToken, updateTarget);
 router.get("/employees", authenticateToken, getAllEmployees);
-router.get("/managed-employees", authenticateToken, getManagedEmployees);
+router.get(
+  "/admin-managed-employees/:id",
+  authenticateToken,
+  getManagedEmployees
+);
+router.get("/managed-employees/", authenticateToken, getManagedEmployees);
 router.get("/employee-detail/:userId", authenticateToken, getEmployeeDetails);
 router.get("/get-visitor", authenticateToken, getVisitors);
 router.get("/top-employees", getTopEmployees);

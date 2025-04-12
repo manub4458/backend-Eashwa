@@ -17,7 +17,8 @@ router.patch("/update-employee/:id", authMiddleware_1.authenticateToken, user_1.
 router.put("/reset-password", user_1.resetPassword);
 router.put("/update-target/:id", authMiddleware_1.authenticateToken, user_1.updateTarget);
 router.get("/employees", authMiddleware_1.authenticateToken, user_1.getAllEmployees);
-router.get("/managed-employees", authMiddleware_1.authenticateToken, user_1.getManagedEmployees);
+router.get("/admin-managed-employees/:id", authMiddleware_1.authenticateToken, user_1.getManagedEmployees);
+router.get("/managed-employees/", authMiddleware_1.authenticateToken, user_1.getManagedEmployees);
 router.get("/employee-detail/:userId", authMiddleware_1.authenticateToken, user_1.getEmployeeDetails);
 router.get("/get-visitor", authMiddleware_1.authenticateToken, user_1.getVisitors);
 router.get("/top-employees", user_1.getTopEmployees);
