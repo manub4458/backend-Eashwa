@@ -6,11 +6,13 @@ export interface TargetAchieved {
   total: number;
   pending: number;
   completed: number;
+  extra: number;
   history?: Array<{
     month: string;
     total: number;
     completed: number;
     pending: number;
+    extra: number;
   }>;
 }
 
@@ -19,6 +21,7 @@ export interface TargetAchievedHistory {
   total: number;
   completed: number;
   pending: number;
+  extra: number;
 }
 
 export interface RatingHistory {

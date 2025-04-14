@@ -400,11 +400,14 @@ export const updateTarget = async (req: Request, res: Response) => {
       total: number;
       completed: number;
     }): TargetAchieved => {
-      const completed = Math.min(newTarget.completed, newTarget.total);
+      const completed = newTarget.completed;
+      const total = newTarget.total;
+      const extra = completed > total ? completed - total : 0;
       return {
-        total: newTarget.total,
-        completed: completed,
-        pending: newTarget.total - completed,
+        total,
+        completed,
+        pending: total - Math.min(completed, total),
+        extra,
       };
     };
 
@@ -412,7 +415,11 @@ export const updateTarget = async (req: Request, res: Response) => {
       battery: {
         total: battery.total,
         completed: battery.completed,
-        pending: battery.total - battery.completed,
+        pending: battery.total - Math.min(battery.completed, battery.total),
+        extra:
+          battery.completed > battery.total
+            ? battery.completed - battery.total
+            : 0,
         current: {
           ...updateField(battery),
         },
@@ -421,7 +428,12 @@ export const updateTarget = async (req: Request, res: Response) => {
       eRickshaw: {
         total: eRickshaw.total,
         completed: eRickshaw.completed,
-        pending: eRickshaw.total - eRickshaw.completed,
+        pending:
+          eRickshaw.total - Math.min(eRickshaw.completed, eRickshaw.total),
+        extra:
+          eRickshaw.completed > eRickshaw.total
+            ? eRickshaw.completed - eRickshaw.total
+            : 0,
         current: {
           ...updateField(eRickshaw),
         },
@@ -430,7 +442,9 @@ export const updateTarget = async (req: Request, res: Response) => {
       scooty: {
         total: scooty.total,
         completed: scooty.completed,
-        pending: scooty.total - scooty.completed,
+        pending: scooty.total - Math.min(scooty.completed, scooty.total),
+        extra:
+          scooty.completed > scooty.total ? scooty.completed - scooty.total : 0,
         current: {
           ...updateField(scooty),
         },
@@ -445,6 +459,7 @@ export const updateTarget = async (req: Request, res: Response) => {
         total: updatedTargets.battery.current.total,
         completed: updatedTargets.battery.current.completed,
         pending: updatedTargets.battery.current.pending,
+        extra: updatedTargets.battery.current.extra,
       };
       updatedTargets.battery.history.push(historyEntry);
       updatedTargets.eRickshaw.history.push({
@@ -452,12 +467,14 @@ export const updateTarget = async (req: Request, res: Response) => {
         total: updatedTargets.eRickshaw.current.total,
         completed: updatedTargets.eRickshaw.current.completed,
         pending: updatedTargets.eRickshaw.current.pending,
+        extra: updatedTargets.eRickshaw.current.extra,
       });
       updatedTargets.scooty.history.push({
         ...historyEntry,
         total: updatedTargets.scooty.current.total,
         completed: updatedTargets.scooty.current.completed,
         pending: updatedTargets.scooty.current.pending,
+        extra: updatedTargets.scooty.current.extra,
       });
     }
 
@@ -487,13 +504,28 @@ export const getTopEmployees = async (req: Request, res: Response) => {
 
     const employeesWithPercentage = users.map((user) => {
       const batteryPercentage = calculatePercentage(
-        user.targetAchieved?.battery || { total: 0, completed: 0, pending: 0 }
+        user.targetAchieved?.battery || {
+          total: 0,
+          completed: 0,
+          pending: 0,
+          extra: 0,
+        }
       );
       const eRickshawPercentage = calculatePercentage(
-        user.targetAchieved?.eRickshaw || { total: 0, completed: 0, pending: 0 }
+        user.targetAchieved?.eRickshaw || {
+          total: 0,
+          completed: 0,
+          pending: 0,
+          extra: 0,
+        }
       );
       const scootyPercentage = calculatePercentage(
-        user.targetAchieved?.scooty || { total: 0, completed: 0, pending: 0 }
+        user.targetAchieved?.scooty || {
+          total: 0,
+          completed: 0,
+          pending: 0,
+          extra: 0,
+        }
       );
 
       const overallPercentage =
