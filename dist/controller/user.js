@@ -341,32 +341,42 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return res.status(404).json({ message: "Employee not found." });
         }
         const updateField = (newTarget) => {
-            const completed = Math.min(newTarget.completed, newTarget.total);
+            const completed = newTarget.completed;
+            const total = newTarget.total;
+            const extra = completed > total ? completed - total : 0;
             return {
-                total: newTarget.total,
-                completed: completed,
-                pending: newTarget.total - completed,
+                total,
+                completed,
+                pending: total - Math.min(completed, total),
+                extra,
             };
         };
         const updatedTargets = {
             battery: {
                 total: battery.total,
                 completed: battery.completed,
-                pending: battery.total - battery.completed,
+                pending: battery.total - Math.min(battery.completed, battery.total),
+                extra: battery.completed > battery.total
+                    ? battery.completed - battery.total
+                    : 0,
                 current: Object.assign({}, updateField(battery)),
                 history: ((_b = (_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) === null || _b === void 0 ? void 0 : _b.history) || [],
             },
             eRickshaw: {
                 total: eRickshaw.total,
                 completed: eRickshaw.completed,
-                pending: eRickshaw.total - eRickshaw.completed,
+                pending: eRickshaw.total - Math.min(eRickshaw.completed, eRickshaw.total),
+                extra: eRickshaw.completed > eRickshaw.total
+                    ? eRickshaw.completed - eRickshaw.total
+                    : 0,
                 current: Object.assign({}, updateField(eRickshaw)),
                 history: (_e = (_d = (_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.eRickshaw) === null || _d === void 0 ? void 0 : _d.history) !== null && _e !== void 0 ? _e : [],
             },
             scooty: {
                 total: scooty.total,
                 completed: scooty.completed,
-                pending: scooty.total - scooty.completed,
+                pending: scooty.total - Math.min(scooty.completed, scooty.total),
+                extra: scooty.completed > scooty.total ? scooty.completed - scooty.total : 0,
                 current: Object.assign({}, updateField(scooty)),
                 history: (_h = (_g = (_f = user.targetAchieved) === null || _f === void 0 ? void 0 : _f.scooty) === null || _g === void 0 ? void 0 : _g.history) !== null && _h !== void 0 ? _h : [],
             },
@@ -378,10 +388,11 @@ const updateTarget = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 total: updatedTargets.battery.current.total,
                 completed: updatedTargets.battery.current.completed,
                 pending: updatedTargets.battery.current.pending,
+                extra: updatedTargets.battery.current.extra,
             };
             updatedTargets.battery.history.push(historyEntry);
-            updatedTargets.eRickshaw.history.push(Object.assign(Object.assign({}, historyEntry), { total: updatedTargets.eRickshaw.current.total, completed: updatedTargets.eRickshaw.current.completed, pending: updatedTargets.eRickshaw.current.pending }));
-            updatedTargets.scooty.history.push(Object.assign(Object.assign({}, historyEntry), { total: updatedTargets.scooty.current.total, completed: updatedTargets.scooty.current.completed, pending: updatedTargets.scooty.current.pending }));
+            updatedTargets.eRickshaw.history.push(Object.assign(Object.assign({}, historyEntry), { total: updatedTargets.eRickshaw.current.total, completed: updatedTargets.eRickshaw.current.completed, pending: updatedTargets.eRickshaw.current.pending, extra: updatedTargets.eRickshaw.current.extra }));
+            updatedTargets.scooty.history.push(Object.assign(Object.assign({}, historyEntry), { total: updatedTargets.scooty.current.total, completed: updatedTargets.scooty.current.completed, pending: updatedTargets.scooty.current.pending, extra: updatedTargets.scooty.current.extra }));
         }
         user.targetAchieved = updatedTargets;
         yield user.save();
@@ -408,9 +419,24 @@ const getTopEmployees = (req, res) => __awaiter(void 0, void 0, void 0, function
         };
         const employeesWithPercentage = users.map((user) => {
             var _a, _b, _c;
-            const batteryPercentage = calculatePercentage(((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || { total: 0, completed: 0, pending: 0 });
-            const eRickshawPercentage = calculatePercentage(((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || { total: 0, completed: 0, pending: 0 });
-            const scootyPercentage = calculatePercentage(((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || { total: 0, completed: 0, pending: 0 });
+            const batteryPercentage = calculatePercentage(((_a = user.targetAchieved) === null || _a === void 0 ? void 0 : _a.battery) || {
+                total: 0,
+                completed: 0,
+                pending: 0,
+                extra: 0,
+            });
+            const eRickshawPercentage = calculatePercentage(((_b = user.targetAchieved) === null || _b === void 0 ? void 0 : _b.eRickshaw) || {
+                total: 0,
+                completed: 0,
+                pending: 0,
+                extra: 0,
+            });
+            const scootyPercentage = calculatePercentage(((_c = user.targetAchieved) === null || _c === void 0 ? void 0 : _c.scooty) || {
+                total: 0,
+                completed: 0,
+                pending: 0,
+                extra: 0,
+            });
             const overallPercentage = (batteryPercentage + eRickshawPercentage + scootyPercentage) / 3;
             return {
                 user,
