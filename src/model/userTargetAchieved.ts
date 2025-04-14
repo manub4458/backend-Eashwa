@@ -1,3 +1,4 @@
+// targetAchievedSchema.ts
 import { Schema } from "mongoose";
 import { TargetAchieved } from "../types";
 
@@ -11,6 +12,10 @@ const targetAchievedSchema = new Schema<TargetAchieved>({
     default: 0,
   },
   completed: {
+    type: Number,
+    default: 0,
+  },
+  extra: {
     type: Number,
     default: 0,
   },

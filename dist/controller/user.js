@@ -139,7 +139,6 @@ const updateEmployee = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const { id } = req.params;
         const updateData = Object.assign({}, req.body);
         delete updateData.password;
-        // Find the user
         const user = yield user_1.default.findById(id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });

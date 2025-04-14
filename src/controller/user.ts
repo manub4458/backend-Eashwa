@@ -161,7 +161,6 @@ export const updateEmployee = async (req: Request, res: Response) => {
 
     delete updateData.password;
 
-    // Find the user
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
