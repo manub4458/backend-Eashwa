@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+// targetAchievedSchema.ts
 const mongoose_1 = require("mongoose");
 const targetAchievedSchema = new mongoose_1.Schema({
     total: {
@@ -11,6 +12,10 @@ const targetAchievedSchema = new mongoose_1.Schema({
         default: 0,
     },
     completed: {
+        type: Number,
+        default: 0,
+    },
+    extra: {
         type: Number,
         default: 0,
     },
