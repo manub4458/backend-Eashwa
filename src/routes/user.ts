@@ -36,7 +36,7 @@ router.post("/process-leads", authenticateToken, processExcelAndCreateLeads);
 router.post("/upload-file-leads", authenticateToken, createLeadsHistory);
 router.patch("/update-employee/:id", authenticateToken, updateEmployee);
 router.put("/reset-password", resetPassword);
-router.put("/update-target/:id", authenticateToken, updateTarget);
+router.put("/update-targe/:id", authenticateToken, updateTarget);
 router.get("/employees", authenticateToken, getAllEmployees);
 router.get(
   "/admin-managed-employees/:id",
