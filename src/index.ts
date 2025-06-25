@@ -42,7 +42,7 @@ app.use((err: Error, req: Request, res:Response, next: NextFunction) => {
 
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Welcome to Server');
+  res.send('Welcome to the Server');
 });
 
 const start = async () => {

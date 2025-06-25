@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message });
 });
 app.get('/', (req, res) => {
-    res.send('Welcome to Server');
+    res.send('Welcome to the Server');
 });
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
