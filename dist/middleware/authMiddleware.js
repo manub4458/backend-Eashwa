@@ -23,9 +23,9 @@ const authenticateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     // const authToken = auth && auth.split(' ')[1];
     // const refreshToken =auth && auth.split('+')[1];
     // const mmy = req.params.id; => may check this this may be correct
-    const authToken = req.header('authorization');
+    const authToken = req.header("authorization");
     if (!authToken) {
-        return res.status(401).send('Token not found');
+        return res.status(401).send("Token not found");
     }
     // const decoded = jwt.verify(authToken.replace('Bearer ', ''), process.env.JWT_SECRET_KEY || " ");
     // const userdata :any = decoded;
@@ -43,21 +43,25 @@ const authenticateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     // console.log("backend authToken", authToken);
     // console.log("backend referesh", refreshToken);
     // authToken = authToken.split(0, authToken.length-1);
-    jsonwebtoken_1.default.verify(authToken.replace('Bearer ', ''), process.env.JWT_SECRET_KEY || "", (err, decode) => {
+    jsonwebtoken_1.default.verify(authToken.replace("Bearer ", ""), process.env.JWT_SECRET_KEY || "", (err, decode) => {
         if (err) {
             jsonwebtoken_1.default.verify(refreshToken, process.env.JWT_REFRESH_SECRET_KEY || "", (refreshErr, refreshDecode) => {
                 //if refresh token gives error
                 if (refreshErr) {
-                    return res.status(401).json({ message: " Authentication Failed : Both tokens are invalid" });
+                    return res
+                        .status(401)
+                        .json({
+                        message: " Authentication Failed : Both tokens are invalid",
+                    });
                 }
                 else {
                     //generate new auth token and refersh token
-                    const newAuthToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_SECRET_KEY || "", { expiresIn: '30m' });
-                    const newRefreshToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_REFRESH_SECRET_KEY || "", { expiresIn: '2h' });
+                    const newAuthToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_SECRET_KEY || "", { expiresIn: "10d" });
+                    const newRefreshToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_REFRESH_SECRET_KEY || "", { expiresIn: "30d" });
                     //save auth token and referesh token in cookies
-                    res.cookie('authToken', newAuthToken, { httpOnly: true });
-                    res.cookie('refreshToken', newRefreshToken, { httpOnly: true });
-                    res.header('Authorization', `Bearer ${newAuthToken}`);
+                    res.cookie("authToken", newAuthToken, { httpOnly: true });
+                    res.cookie("refreshToken", newRefreshToken, { httpOnly: true });
+                    res.header("Authorization", `Bearer ${newAuthToken}`);
                     // console.log(refreshDecode.userId,"liasd")
                     const find_user = user_1.default.findById(refreshDecode.userId);
                     if (!find_user) {
