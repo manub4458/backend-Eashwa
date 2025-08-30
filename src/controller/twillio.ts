@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import twilio from "twilio";
 import dotenv from "dotenv";
 import messageUser from "../model/messageUser";
+import * as orderService from "../services/orderService";
+import * as notificationService from "../services/notificationService";
 
 dotenv.config();
 
@@ -14,8 +16,14 @@ export const submitRequest = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, productDescription, vendorName, userPhoneNumber, amount, time } =
-    req.body;
+  const {
+    name,
+    productDescription,
+    vendorName,
+    userPhoneNumber,
+    amount,
+    time,
+  } = req.body;
 
   try {
     const formResposne = await client.messages.create({
@@ -42,33 +50,34 @@ export const submitRequest = async (
         "5": amount,
       }),
     });
-    const existingUser = await messageUser.findOne({ whatsappNumber: userPhoneNumber });
+    const existingUser = await messageUser.findOne({
+      whatsappNumber: userPhoneNumber,
+    });
     if (existingUser) {
       const updatedUser = await messageUser.updateOne(
         { whatsappNumber: userPhoneNumber },
         {
           $set: {
             messageId: formResposne.sid,
-            secondMessageId:secondResponse.sid,
+            secondMessageId: secondResponse.sid,
             name,
             productDescription,
-            vendorName, 
+            vendorName,
             amount,
-            time
+            time,
           },
         }
       );
-
     } else {
       const newMessage = new messageUser({
         name,
         messageId: formResposne.sid,
-        secondMessageId:secondResponse.sid,
+        secondMessageId: secondResponse.sid,
         whatsappNumber: userPhoneNumber,
         productDescription,
-        vendorName, 
+        vendorName,
         amount,
-        time
+        time,
       });
       await newMessage.save();
     }
@@ -87,12 +96,57 @@ export const whatsappWebhook = async (
 ): Promise<void> => {
   const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
   const body = req.body;
-  let messageWhatsapp : typeof messageUser | null = await messageUser.findOne({ messageId: body.OriginalRepliedMessageSid });
-  if(messageWhatsapp===null){
-     messageWhatsapp = await messageUser.findOne({ secondMessageId: body.OriginalRepliedMessageSid });
-  }
+  const reply = body.Body ? body.Body.toLowerCase().trim() : "";
+  const repliedSid = body.OriginalRepliedMessageSid;
 
   try {
+    const order = await orderService.findOrderBySid(repliedSid);
+    if (order && (reply === "received" || reply === "not received")) {
+      if (reply === "received") {
+        const orderId = `ORD-${Date.now()}`;
+        //@ts-ignore
+        const updatedOrder = await orderService.updateOrder(order._id, {
+          status: "ready_for_dispatch",
+          orderId,
+        });
+        await notificationService.sendNotificationToUser(
+          order.submittedBy,
+          "Your payment has been received.",
+          "HX1449433d60e7fe1ddfbb333486d928cf"
+        );
+        if (updatedOrder) {
+          await notificationService.sendDispatchNotification(updatedOrder);
+        }
+      } else if (reply === "not received") {
+        //@ts-ignore
+        await orderService.updateOrder(order._id, {
+          status: "payment_not_received",
+        });
+        await notificationService.sendNotificationToUser(
+          order.submittedBy.toString(),
+          "Payment not received. Please check with Accounts Department.",
+          "HX17353f91b0a16019c35b353c2ff19fa2"
+        );
+      }
+      res.send("<Response></Response>");
+      return;
+    }
+
+    let messageWhatsapp: typeof messageUser | null = await messageUser.findOne({
+      messageId: body.OriginalRepliedMessageSid,
+    });
+    if (messageWhatsapp === null) {
+      messageWhatsapp = await messageUser.findOne({
+        secondMessageId: body.OriginalRepliedMessageSid,
+      });
+    }
+    // let messageWhatsapp = await messageUser.findOne({ messageId: repliedSid });
+    // if (!messageWhatsapp) {
+    //   messageWhatsapp = await messageUser.findOne({
+    //     secondMessageId: repliedSid,
+    //   });
+    // }
+
     if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
@@ -109,7 +163,7 @@ export const whatsappWebhook = async (
           "4": messageWhatsapp?.time,
           //@ts-ignore
           "5": `₹${messageWhatsapp?.amount}`,
-        })
+        }),
       });
       await client.messages.create({
         from: "whatsapp:+919911130173",
@@ -126,17 +180,17 @@ export const whatsappWebhook = async (
           "4": messageWhatsapp?.time,
           //@ts-ignore
           "5": `₹${messageWhatsapp?.amount}`,
-        })
+        }),
       });
 
-      if(req.body.From ==="whatsapp:+917723866666"){
+      if (req.body.From === "whatsapp:+917723866666") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
           //@ts-ignore
           to: `whatsapp:+919990148011`,
           contentSid: "HXb5947d790365975417f2bcc62852ab88",
         });
-      }else if(req.body.From ==="whatsapp:+919990148011"){
+      } else if (req.body.From === "whatsapp:+919990148011") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
           //@ts-ignore
@@ -145,10 +199,8 @@ export const whatsappWebhook = async (
         });
       }
 
-
       res.status(200).send("<Response></Response>");
-    }
-    else if (messageFromAdmin === "reject") {
+    } else if (messageFromAdmin === "reject") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
         to: `${req.body.From}`,
@@ -156,8 +208,7 @@ export const whatsappWebhook = async (
       });
 
       res.status(200).send("<Response></Response>");
-    }
-    else if (messageFromAdmin.startsWith("reason:")) {
+    } else if (messageFromAdmin.startsWith("reason:")) {
       const rejectionReason = messageFromAdmin
         .replace(/^reason:\s*/i, "")
         .trim();
@@ -177,28 +228,28 @@ export const whatsappWebhook = async (
           "5": messageWhatsapp?.time,
           //@ts-ignore
           "6": `₹${messageWhatsapp?.amount}`,
-        })
+        }),
       });
 
-      if(req.body.From ==="whatsapp:+917723866666"){
+      if (req.body.From === "whatsapp:+917723866666") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
           //@ts-ignore
           to: `whatsapp:+919990148011`,
           contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
           contentVariables: JSON.stringify({
-            "1": rejectionReason
-          })
+            "1": rejectionReason,
+          }),
         });
-      }else if(req.body.From ==="whatsapp:+919990148011"){
+      } else if (req.body.From === "whatsapp:+919990148011") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
           //@ts-ignore
           to: `whatsapp:+917723866666`,
           contentSid: "HXbc0d42ac7ebeac2c22ca5dc2aba4577a",
           contentVariables: JSON.stringify({
-            "1": rejectionReason
-          })
+            "1": rejectionReason,
+          }),
         });
       }
 
@@ -214,3 +265,51 @@ export const whatsappWebhook = async (
   }
 };
 
+// export const webhook = async (req: Request, res: Response): Promise<void> => {
+//   const body = req.body;
+//   const reply = body.Body ? body.Body.toLowerCase().trim() : "";
+//   const repliedSid = body.OriginalRepliedMessageSid;
+
+//   if (!repliedSid || !reply) {
+//     res.send("<Response></Response>");
+//     return;
+//   }
+
+//   try {
+//     const order = await orderService.findOrderBySid(repliedSid);
+//     if (!order) {
+//       res.send("<Response></Response>");
+//       return;
+//     }
+
+//     if (reply === "received") {
+//       const orderId = `ORD-${Date.now()}`;
+//       //@ts-ignore
+//       const updatedOrder = await orderService.updateOrder(order._id, {
+//         status: "ready_for_dispatch",
+//         orderId,
+//       });
+//       await notificationService.sendNotificationToUser(
+//         order.submittedBy.toString(),
+//         "Your payment has been received."
+//       );
+//       if (updatedOrder) {
+//         await notificationService.sendDispatchNotification(updatedOrder);
+//       }
+//     } else if (reply === "not received") {
+//       //@ts-ignore
+//       await orderService.updateOrder(order._id, {
+//         status: "payment_not_received",
+//       });
+//       await notificationService.sendNotificationToUser(
+//         order.submittedBy.toString(),
+//         "Payment not received. Please check with Accounts Department."
+//       );
+//     }
+
+//     res.send("<Response></Response>");
+//   } catch (error) {
+//     console.error("Webhook error:", error);
+//     res.status(500).send("<Response></Response>");
+//   }
+// };

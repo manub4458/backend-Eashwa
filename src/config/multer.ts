@@ -21,6 +21,16 @@ const excelStorage = new CloudinaryStorage({
   },
 });
 
+const pdfStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    //@ts-ignore
+    folder: "pdf_files",
+    resource_type: "raw",
+    format: "pdf",
+  },
+});
+
 const upload = multer({ storage });
 
 export const uploadExcel = multer({
@@ -34,6 +44,17 @@ export const uploadExcel = multer({
       cb(null, true);
     } else {
       cb(new Error("Only Excel files are allowed"));
+    }
+  },
+}).single("file");
+
+export const uploadPdf = multer({
+  storage: pdfStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"));
     }
   },
 }).single("file");

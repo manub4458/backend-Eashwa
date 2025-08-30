@@ -71,6 +71,7 @@ export interface IUser extends Document {
     ref: string;
   }[];
   manages: Types.ObjectId[];
+  orders?: Types.ObjectId[];
   managedBy?: Types.ObjectId;
   ratings: {
     current: number;
@@ -126,4 +127,36 @@ export interface LeadType extends Document {
   officeVisitRequired: boolean;
   leadBy: Types.ObjectId;
   isTargetLead?: boolean;
+}
+
+export interface IOrder extends Document {
+  piNumber: string;
+  partyName: string;
+  showroomName: string;
+  location: string;
+  quantity: number;
+  totalAmount: number;
+  agentName: string;
+  amountReceived: number;
+  orderModel: string;
+  colorVariants: string;
+  batteryType: string;
+  deadline: Date;
+  agentPhone: string;
+  dealerPhone: string;
+  piPdf: string;
+  submittedBy: Types.ObjectId;
+  status:
+    | "pending_verification"
+    | "payment_received"
+    | "payment_not_received"
+    | "ready_for_dispatch"
+    | "pending"
+    | "completed";
+  orderId?: string;
+  driverNumber?: string;
+  vehicleNumber?: string;
+  accountsMessageSid?: string;
+  reminderSent: boolean;
+  priority: number;
 }

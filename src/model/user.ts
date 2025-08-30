@@ -112,6 +112,12 @@ const userSchema = new Schema<IUser>({
     ref: "User",
     default: null,
   },
+  orders: [
+    {
+      type: Types.ObjectId,
+      ref: "Order",
+    },
+  ],
   ratings: {
     current: {
       type: Number,
