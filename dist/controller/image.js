@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadExcelFile = exports.uploadImages = void 0;
+exports.uploadPdfFile = exports.uploadExcelFile = exports.uploadImages = void 0;
 const multer_1 = require("../config/multer");
 const uploadImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -63,3 +63,35 @@ const uploadExcelFile = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.uploadExcelFile = uploadExcelFile;
+const uploadPdfFile = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        (0, multer_1.uploadPdf)(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
+            if (err) {
+                return res.status(400).json({
+                    success: false,
+                    message: err.message,
+                });
+            }
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please upload a PDF file",
+                });
+            }
+            return res.status(200).json({
+                success: true,
+                message: "File uploaded successfully",
+                fileUrl: req.file.path,
+            });
+        }));
+    }
+    catch (error) {
+        console.error("Error uploading PDF file:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error uploading PDF file",
+            error: error,
+        });
+    }
+});
+exports.uploadPdfFile = uploadPdfFile;

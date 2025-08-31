@@ -9,4 +9,5 @@ const image_1 = require("../controller/image");
 const router = (0, express_1.Router)();
 router.post("/upload-images", multer_1.default.array("images", 10), image_1.uploadImages);
 router.post("/upload-excel", image_1.uploadExcelFile);
+router.post("/upload-pdf", image_1.uploadPdfFile);
 exports.default = router;

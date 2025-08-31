@@ -124,6 +124,12 @@ const userSchema = new mongoose_1.Schema({
         ref: "User",
         default: null,
     },
+    orders: [
+        {
+            type: mongoose_1.Types.ObjectId,
+            ref: "Order",
+        },
+    ],
     ratings: {
         current: {
             type: Number,
