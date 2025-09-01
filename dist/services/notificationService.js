@@ -19,9 +19,9 @@ const user_1 = __importDefault(require("../model/user"));
 dotenv_1.default.config();
 const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const TWILIO_WHATSAPP_FROM = "whatsapp:+919911130173";
-const ACCOUNTS_WHATSAPP = "whatsapp:+918077335703";
-const DISPATCH_WHATSAPP = "whatsapp:+918077335703";
-const DEEPAK_WHATSAPP = "whatsapp:+918077335703";
+const ACCOUNTS_WHATSAPP = "whatsapp:+918218698921";
+const DISPATCH_WHATSAPP = "whatsapp:+918791966851";
+const DEEPAK_WHATSAPP = "whatsapp:+919368894736";
 const sendAccountsVerificationNotification = (order) => __awaiter(void 0, void 0, void 0, function* () {
     const message = yield client.messages.create({
         from: TWILIO_WHATSAPP_FROM,
