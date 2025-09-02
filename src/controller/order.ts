@@ -45,7 +45,10 @@ export const deliverOrder = async (
   try {
     const { driverNumber, vehicleNumber } = req.body;
     const order = await orderService.findOrderById(req.params.orderId);
-    if (!order || order.status !== "ready_for_dispatch") {
+    if (
+      !order ||
+      (order.status !== "ready_for_dispatch" && order.status !== "pending")
+    ) {
       res
         .status(400)
         .json({ success: false, message: "Invalid order status." });
@@ -187,13 +190,21 @@ export const getDispatchOrders = async (
   }
 };
 
-export const updateOrderPriority = async (req: Request, res: Response): Promise<void> => {
+export const updateOrderPriority = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { priority } = req.body;
 
     if (typeof priority !== "number" || priority < 1) {
-      res.status(400).json({ success: false, message: "Priority must be a positive number." });
+      res
+        .status(400)
+        .json({
+          success: false,
+          message: "Priority must be a positive number.",
+        });
       return;
     }
 
@@ -214,6 +225,8 @@ export const updateOrderPriority = async (req: Request, res: Response): Promise<
       order: updatedOrder,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to update priority.", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update priority.", error });
   }
 };

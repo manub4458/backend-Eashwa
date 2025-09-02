@@ -66,7 +66,8 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { driverNumber, vehicleNumber } = req.body;
         const order = yield orderService.findOrderById(req.params.orderId);
-        if (!order || order.status !== "ready_for_dispatch") {
+        if (!order ||
+            (order.status !== "ready_for_dispatch" && order.status !== "pending")) {
             res
                 .status(400)
                 .json({ success: false, message: "Invalid order status." });
@@ -188,7 +189,12 @@ const updateOrderPriority = (req, res) => __awaiter(void 0, void 0, void 0, func
         const { id } = req.params;
         const { priority } = req.body;
         if (typeof priority !== "number" || priority < 1) {
-            res.status(400).json({ success: false, message: "Priority must be a positive number." });
+            res
+                .status(400)
+                .json({
+                success: false,
+                message: "Priority must be a positive number.",
+            });
             return;
         }
         const updatedOrder = yield order_1.default.findByIdAndUpdate(id, { priority }, { new: true, runValidators: true });
@@ -203,7 +209,9 @@ const updateOrderPriority = (req, res) => __awaiter(void 0, void 0, void 0, func
         });
     }
     catch (error) {
-        res.status(500).json({ success: false, message: "Failed to update priority.", error });
+        res
+            .status(500)
+            .json({ success: false, message: "Failed to update priority.", error });
     }
 });
 exports.updateOrderPriority = updateOrderPriority;
