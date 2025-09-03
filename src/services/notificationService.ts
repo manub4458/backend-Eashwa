@@ -10,9 +10,9 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 const TWILIO_WHATSAPP_FROM = "whatsapp:+919911130173";
-const ACCOUNTS_WHATSAPP = "whatsapp:+918218698921";
-const DISPATCH_WHATSAPP = "whatsapp:+918791966851";
-const DEEPAK_WHATSAPP = "whatsapp:+919368894736";
+const ACCOUNTS_WHATSAPP = "whatsapp:+919917108992";
+const DISPATCH_WHATSAPP = "whatsapp:+91782720961";
+const DEEPAK_WHATSAPP = "whatsapp:+919045099190";
 
 export const sendAccountsVerificationNotification = async (
   order: IOrder
