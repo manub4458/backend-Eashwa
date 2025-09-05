@@ -64,7 +64,7 @@ const submitOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 exports.submitOrder = submitOrder;
 const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { driverNumber, vehicleNumber } = req.body;
+        const { driverNumber, vehicleNumber, transporterName } = req.body;
         const order = yield orderService.findOrderById(req.params.orderId);
         if (!order ||
             (order.status !== "ready_for_dispatch" && order.status !== "pending")) {
@@ -77,6 +77,8 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             status: "completed",
             driverNumber,
             vehicleNumber,
+            transporterName,
+            pedingReason: "-",
         });
         if (updatedOrder) {
             yield notificationService.sendDeepakConfirmation(updatedOrder);
@@ -92,6 +94,7 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.deliverOrder = deliverOrder;
 const markPending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        const { pedingReason } = req.body;
         const order = yield orderService.findOrderById(req.params.orderId);
         if (!order || order.status !== "ready_for_dispatch") {
             res
@@ -99,7 +102,10 @@ const markPending = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 .json({ success: false, message: "Invalid order status." });
             return;
         }
-        yield orderService.updateOrder(req.params.orderId, { status: "pending" });
+        yield orderService.updateOrder(req.params.orderId, {
+            status: "pending",
+            pedingReason,
+        });
         res.status(200).json({ success: true });
     }
     catch (error) {
@@ -189,9 +195,7 @@ const updateOrderPriority = (req, res) => __awaiter(void 0, void 0, void 0, func
         const { id } = req.params;
         const { priority } = req.body;
         if (typeof priority !== "number" || priority < 1) {
-            res
-                .status(400)
-                .json({
+            res.status(400).json({
                 success: false,
                 message: "Priority must be a positive number.",
             });

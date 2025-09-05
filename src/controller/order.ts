@@ -43,7 +43,7 @@ export const deliverOrder = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { driverNumber, vehicleNumber } = req.body;
+    const { driverNumber, vehicleNumber, transporterName } = req.body;
     const order = await orderService.findOrderById(req.params.orderId);
     if (
       !order ||
@@ -58,6 +58,8 @@ export const deliverOrder = async (
       status: "completed",
       driverNumber,
       vehicleNumber,
+      transporterName,
+      pedingReason: "-",
     });
     if (updatedOrder) {
       await notificationService.sendDeepakConfirmation(updatedOrder);
@@ -75,6 +77,7 @@ export const markPending = async (
   res: Response
 ): Promise<void> => {
   try {
+    const { pedingReason } = req.body;
     const order = await orderService.findOrderById(req.params.orderId);
     if (!order || order.status !== "ready_for_dispatch") {
       res
@@ -82,7 +85,10 @@ export const markPending = async (
         .json({ success: false, message: "Invalid order status." });
       return;
     }
-    await orderService.updateOrder(req.params.orderId, { status: "pending" });
+    await orderService.updateOrder(req.params.orderId, {
+      status: "pending",
+      pedingReason,
+    });
     res.status(200).json({ success: true });
   } catch (error) {
     res
@@ -199,12 +205,10 @@ export const updateOrderPriority = async (
     const { priority } = req.body;
 
     if (typeof priority !== "number" || priority < 1) {
-      res
-        .status(400)
-        .json({
-          success: false,
-          message: "Priority must be a positive number.",
-        });
+      res.status(400).json({
+        success: false,
+        message: "Priority must be a positive number.",
+      });
       return;
     }
 

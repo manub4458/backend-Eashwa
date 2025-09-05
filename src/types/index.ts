@@ -159,4 +159,6 @@ export interface IOrder extends Document {
   accountsMessageSid?: string;
   reminderSent: boolean;
   priority: number;
+  transporterName?: string;
+  pedingReason?: string;
 }

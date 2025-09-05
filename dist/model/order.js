@@ -33,6 +33,8 @@ const orderSchema = new mongoose_1.Schema({
     orderId: { type: String },
     driverNumber: { type: String },
     vehicleNumber: { type: String },
+    transporterName: { type: String },
+    pedingReason: { type: String, default: "" },
     accountsMessageSid: { type: String },
     reminderSent: { type: Boolean, default: false },
     priority: { type: Number, default: null },
