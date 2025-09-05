@@ -696,32 +696,32 @@ export const addVisitor = async (req: Request, res: Response) => {
   }
 };
 
-export const getVisitors = async (req: Request, res: Response) => {
-  try {
-    const userId = (req as any).userId;
+// export const getVisitors = async (req: Request, res: Response) => {
+//   try {
+//     const userId = (req as any).userId;
 
-    const visitors = await Visitor.find({ visitedBy: userId })
-      .populate({
-        path: "visitedBy",
-        select: "name",
-      })
-      .exec();
+//     const visitors = await Visitor.find({ visitedBy: userId })
+//       .populate({
+//         path: "visitedBy",
+//         select: "name",
+//       })
+//       .exec();
 
-    const visitorDetails = visitors.map((visitor) => ({
-      clientName: visitor.clientName,
-      clientPhoneNumber: visitor.clientPhoneNumber,
-      clientAddress: visitor.clientAddress,
-      visitDateTime: visitor.visitDateTime,
-      purpose: visitor.purpose,
-      feedback: visitor.feedback,
-      addedBy: (visitor.visitedBy as any).name,
-    }));
+//     const visitorDetails = visitors.map((visitor) => ({
+//       clientName: visitor.clientName,
+//       clientPhoneNumber: visitor.clientPhoneNumber,
+//       clientAddress: visitor.clientAddress,
+//       visitDateTime: visitor.visitDateTime,
+//       purpose: visitor.purpose,
+//       feedback: visitor.feedback,
+//       addedBy: (visitor.visitedBy as any).name,
+//     }));
 
-    res.status(200).json({ visitorDetails });
-  } catch (error) {
-    return res.status(500).json({ message: "Internal server error", error });
-  }
-};
+//     res.status(200).json({ visitorDetails });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Internal server error", error });
+//   }
+// };
 
 export const processExcelAndCreateLeads = async (
   req: Request,
@@ -1195,5 +1195,44 @@ export const deleteTargetLeadFile = async (req: Request, res: Response) => {
     return res
       .status(500)
       .json({ success: false, message: "Error deleting target lead file" });
+  }
+};
+
+export const getVisitors = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req as any).userId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const visitors = await Visitor.find({ visitedBy: userId })
+      .populate("visitedBy", "name email")
+      .skip(skip)
+      .limit(limit)
+      .sort({ visitDateTime: -1 });
+
+    const total = await Visitor.countDocuments();
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      success: true,
+      data: visitors,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching visitors",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 };

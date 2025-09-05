@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.getVisitors = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
+exports.getVisitors = exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -572,31 +572,29 @@ const addVisitor = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.addVisitor = addVisitor;
-const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const userId = req.userId;
-        const visitors = yield visitor_1.default.find({ visitedBy: userId })
-            .populate({
-            path: "visitedBy",
-            select: "name",
-        })
-            .exec();
-        const visitorDetails = visitors.map((visitor) => ({
-            clientName: visitor.clientName,
-            clientPhoneNumber: visitor.clientPhoneNumber,
-            clientAddress: visitor.clientAddress,
-            visitDateTime: visitor.visitDateTime,
-            purpose: visitor.purpose,
-            feedback: visitor.feedback,
-            addedBy: visitor.visitedBy.name,
-        }));
-        res.status(200).json({ visitorDetails });
-    }
-    catch (error) {
-        return res.status(500).json({ message: "Internal server error", error });
-    }
-});
-exports.getVisitors = getVisitors;
+// export const getVisitors = async (req: Request, res: Response) => {
+//   try {
+//     const userId = (req as any).userId;
+//     const visitors = await Visitor.find({ visitedBy: userId })
+//       .populate({
+//         path: "visitedBy",
+//         select: "name",
+//       })
+//       .exec();
+//     const visitorDetails = visitors.map((visitor) => ({
+//       clientName: visitor.clientName,
+//       clientPhoneNumber: visitor.clientPhoneNumber,
+//       clientAddress: visitor.clientAddress,
+//       visitDateTime: visitor.visitDateTime,
+//       purpose: visitor.purpose,
+//       feedback: visitor.feedback,
+//       addedBy: (visitor.visitedBy as any).name,
+//     }));
+//     res.status(200).json({ visitorDetails });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Internal server error", error });
+//   }
+// };
 const processExcelAndCreateLeads = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { fileUrl, employeeId } = req.body;
@@ -1001,3 +999,36 @@ const deleteTargetLeadFile = (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 });
 exports.deleteTargetLeadFile = deleteTargetLeadFile;
+const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const visitors = yield visitor_1.default.find({ visitedBy: userId })
+            .populate("visitedBy", "name email")
+            .skip(skip)
+            .limit(limit)
+            .sort({ visitDateTime: -1 });
+        const total = yield visitor_1.default.countDocuments();
+        const totalPages = Math.ceil(total / limit);
+        res.status(200).json({
+            success: true,
+            data: visitors,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit,
+            },
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error fetching visitors",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+});
+exports.getVisitors = getVisitors;
