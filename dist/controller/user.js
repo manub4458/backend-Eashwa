@@ -1005,12 +1005,13 @@ const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
-        const visitors = yield visitor_1.default.find({ visitedBy: userId })
-            .populate("visitedBy", "name email")
+        const filter = { visitedBy: userId };
+        const visitors = yield visitor_1.default.find(filter)
+            .populate("visitedBy", "name")
             .skip(skip)
             .limit(limit)
             .sort({ visitDateTime: -1 });
-        const total = yield visitor_1.default.countDocuments();
+        const total = yield visitor_1.default.countDocuments(filter);
         const totalPages = Math.ceil(total / limit);
         res.status(200).json({
             success: true,

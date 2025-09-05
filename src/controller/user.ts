@@ -1207,14 +1207,15 @@ export const getVisitors = async (
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
+    const filter = { visitedBy: userId };
 
-    const visitors = await Visitor.find({ visitedBy: userId })
-      .populate("visitedBy", "name email")
+    const visitors = await Visitor.find(filter)
+      .populate("visitedBy", "name")
       .skip(skip)
       .limit(limit)
       .sort({ visitDateTime: -1 });
 
-    const total = await Visitor.countDocuments();
+    const total = await Visitor.countDocuments(filter);
 
     const totalPages = Math.ceil(total / limit);
 
