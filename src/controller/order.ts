@@ -15,6 +15,16 @@ export const submitOrder = async (
         .json({ success: false, message: "PI PDF URL is required." });
       return;
     }
+
+    const existingOrder = await orderService.findOrderByPiNumber(data.piNumber);
+    if (existingOrder) {
+      res.status(409).json({
+        success: false,
+        message: `Order with PI Number ${data.piNumber} already exists.`,
+      });
+      return;
+    }
+
     const orderData = {
       ...data,
       quantity: parseInt(data.quantity),

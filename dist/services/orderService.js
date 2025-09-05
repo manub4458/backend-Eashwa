@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.findOrderBySid = exports.findOrderById = exports.updateOrder = exports.createOrder = void 0;
+exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.findOrderBySid = exports.findOrderById = exports.updateOrder = exports.findOrderByPiNumber = exports.createOrder = void 0;
 const notificationService = __importStar(require("./notificationService"));
 const order_1 = __importDefault(require("../model/order"));
 const createOrder = (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -43,6 +43,10 @@ const createOrder = (data) => __awaiter(void 0, void 0, void 0, function* () {
     return order.save();
 });
 exports.createOrder = createOrder;
+const findOrderByPiNumber = (piNumber) => __awaiter(void 0, void 0, void 0, function* () {
+    return order_1.default.findOne({ piNumber });
+});
+exports.findOrderByPiNumber = findOrderByPiNumber;
 const updateOrder = (id, updates) => __awaiter(void 0, void 0, void 0, function* () {
     return order_1.default.findByIdAndUpdate(id, updates, { new: true });
 });

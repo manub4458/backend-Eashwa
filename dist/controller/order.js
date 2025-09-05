@@ -48,6 +48,14 @@ const submitOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
                 .json({ success: false, message: "PI PDF URL is required." });
             return;
         }
+        const existingOrder = yield orderService.findOrderByPiNumber(data.piNumber);
+        if (existingOrder) {
+            res.status(409).json({
+                success: false,
+                message: `Order with PI Number ${data.piNumber} already exists.`,
+            });
+            return;
+        }
         const orderData = Object.assign(Object.assign({}, data), { quantity: parseInt(data.quantity), totalAmount: parseFloat(data.totalAmount), amountReceived: parseFloat(data.amountReceived), deadline: new Date(data.deadline), piPdf: data.piPdf, submittedBy: req.userId });
         const order = yield orderService.createOrder(orderData);
         const sid = yield notificationService.sendAccountsVerificationNotification(order);

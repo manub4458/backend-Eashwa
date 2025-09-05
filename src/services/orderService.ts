@@ -8,6 +8,12 @@ export const createOrder = async (data: Partial<IOrder>): Promise<IOrder> => {
   return order.save();
 };
 
+export const findOrderByPiNumber = async (
+  piNumber: string
+): Promise<IOrder | null> => {
+  return Order.findOne({ piNumber });
+};
+
 export const updateOrder = async (
   id: Types.ObjectId | string,
   updates: Partial<IOrder>
