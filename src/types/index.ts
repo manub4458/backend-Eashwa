@@ -160,5 +160,5 @@ export interface IOrder extends Document {
   reminderSent: boolean;
   priority: number;
   transporterName?: string;
-  pedingReason?: string;
+  pendingReason?: string;
 }

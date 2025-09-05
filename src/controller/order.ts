@@ -59,7 +59,7 @@ export const deliverOrder = async (
       driverNumber,
       vehicleNumber,
       transporterName,
-      pedingReason: "-",
+      pendingReason: "-",
     });
     if (updatedOrder) {
       await notificationService.sendDeepakConfirmation(updatedOrder);
@@ -77,7 +77,17 @@ export const markPending = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { pedingReason } = req.body;
+    const { pendingReason } = req.body;
+    if (
+      !pendingReason ||
+      typeof pendingReason !== "string" ||
+      !pendingReason.trim()
+    ) {
+      res
+        .status(400)
+        .json({ success: false, message: "Pending reason is required." });
+      return;
+    }
     const order = await orderService.findOrderById(req.params.orderId);
     if (!order || order.status !== "ready_for_dispatch") {
       res
@@ -87,7 +97,7 @@ export const markPending = async (
     }
     await orderService.updateOrder(req.params.orderId, {
       status: "pending",
-      pedingReason,
+      pendingReason,
     });
     res.status(200).json({ success: true });
   } catch (error) {

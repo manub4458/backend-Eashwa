@@ -78,7 +78,7 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             driverNumber,
             vehicleNumber,
             transporterName,
-            pedingReason: "-",
+            pendingReason: "-",
         });
         if (updatedOrder) {
             yield notificationService.sendDeepakConfirmation(updatedOrder);
@@ -94,7 +94,15 @@ const deliverOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 exports.deliverOrder = deliverOrder;
 const markPending = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { pedingReason } = req.body;
+        const { pendingReason } = req.body;
+        if (!pendingReason ||
+            typeof pendingReason !== "string" ||
+            !pendingReason.trim()) {
+            res
+                .status(400)
+                .json({ success: false, message: "Pending reason is required." });
+            return;
+        }
         const order = yield orderService.findOrderById(req.params.orderId);
         if (!order || order.status !== "ready_for_dispatch") {
             res
@@ -104,7 +112,7 @@ const markPending = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         }
         yield orderService.updateOrder(req.params.orderId, {
             status: "pending",
-            pedingReason,
+            pendingReason,
         });
         res.status(200).json({ success: true });
     }
