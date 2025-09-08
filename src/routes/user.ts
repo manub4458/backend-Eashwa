@@ -20,6 +20,7 @@ import {
   deleteTargetLeadFile,
   updateEmployee,
   getManagedEmployees,
+  getVisitorsOfEmployee,
 } from "../controller/user";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -47,7 +48,7 @@ router.get(
 router.get("/managed-employees/", authenticateToken, getManagedEmployees);
 router.get("/employee-detail/:userId", authenticateToken, getEmployeeDetails);
 router.get("/get-visitor", authenticateToken, getVisitors);
-router.get("/get-visitor/:id", authenticateToken, getVisitors);
+router.get("/get-visitor/:id", authenticateToken, getVisitorsOfEmployee);
 router.get("/top-employees", getTopEmployees);
 router.get("/leads", authenticateToken, getLeads);
 //user file lead

@@ -1279,7 +1279,7 @@ export const getVisitorsOfEmployee = async (
       if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 1);
-        filter.createdAt = {
+        filter.visitDateTime = {
           $gte: startDate,
           $lt: endDate,
         };
