@@ -1217,7 +1217,7 @@ export const getVisitors = async (
       if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 1);
-        filter.createdAt = {
+        filter.visitDateTime = {
           $gte: startDate,
           $lt: endDate,
         };
@@ -1265,7 +1265,7 @@ export const getVisitorsOfEmployee = async (
 ): Promise<void> => {
   try {
     const userId = (req as any).userId;
-      const { id } = req.params;
+    const { id } = req.params;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
