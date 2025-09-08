@@ -1207,13 +1207,96 @@ export const getVisitors = async (
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
-    const filter = { visitedBy: userId };
+
+    const filter: any = { visitedBy: userId };
+
+    const month = req.query.month ? parseInt(req.query.month as string) : null;
+    const year = req.query.year ? parseInt(req.query.year as string) : null;
+
+    if (month && year) {
+      if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 1);
+        filter.createdAt = {
+          $gte: startDate,
+          $lt: endDate,
+        };
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Invalid month or year",
+        });
+        return;
+      }
+    }
 
     const visitors = await Visitor.find(filter)
       .populate("visitedBy", "name")
       .skip(skip)
       .limit(limit)
-      .sort({ visitDateTime: -1 });
+      .sort({ createdAt: -1 });
+
+    const total = await Visitor.countDocuments(filter);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      success: true,
+      data: visitors,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: total,
+        itemsPerPage: limit,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching visitors",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const getVisitorsOfEmployee = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = (req as any).userId;
+      const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const filter: any = { visitedBy: id };
+
+    const month = req.query.month ? parseInt(req.query.month as string) : null;
+    const year = req.query.year ? parseInt(req.query.year as string) : null;
+
+    if (month && year) {
+      if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 1);
+        filter.createdAt = {
+          $gte: startDate,
+          $lt: endDate,
+        };
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Invalid month or year",
+        });
+        return;
+      }
+    }
+
+    const visitors = await Visitor.find(filter)
+      .populate("visitedBy", "name")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
 
     const total = await Visitor.countDocuments(filter);
 

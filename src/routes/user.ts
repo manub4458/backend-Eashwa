@@ -43,9 +43,11 @@ router.get(
   authenticateToken,
   getManagedEmployees
 );
+
 router.get("/managed-employees/", authenticateToken, getManagedEmployees);
 router.get("/employee-detail/:userId", authenticateToken, getEmployeeDetails);
 router.get("/get-visitor", authenticateToken, getVisitors);
+router.get("/get-visitor/:id", authenticateToken, getVisitors);
 router.get("/top-employees", getTopEmployees);
 router.get("/leads", authenticateToken, getLeads);
 //user file lead

@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getVisitors = exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
+exports.getVisitorsOfEmployee = exports.getVisitors = exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -1006,11 +1006,30 @@ const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
         const filter = { visitedBy: userId };
+        const month = req.query.month ? parseInt(req.query.month) : null;
+        const year = req.query.year ? parseInt(req.query.year) : null;
+        if (month && year) {
+            if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 1);
+                filter.createdAt = {
+                    $gte: startDate,
+                    $lt: endDate,
+                };
+            }
+            else {
+                res.status(400).json({
+                    success: false,
+                    message: "Invalid month or year",
+                });
+                return;
+            }
+        }
         const visitors = yield visitor_1.default.find(filter)
             .populate("visitedBy", "name")
             .skip(skip)
             .limit(limit)
-            .sort({ visitDateTime: -1 });
+            .sort({ createdAt: -1 });
         const total = yield visitor_1.default.countDocuments(filter);
         const totalPages = Math.ceil(total / limit);
         res.status(200).json({
@@ -1033,3 +1052,57 @@ const getVisitors = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.getVisitors = getVisitors;
+const getVisitorsOfEmployee = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const userId = req.userId;
+        const { id } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const filter = { visitedBy: id };
+        const month = req.query.month ? parseInt(req.query.month) : null;
+        const year = req.query.year ? parseInt(req.query.year) : null;
+        if (month && year) {
+            if (month >= 1 && month <= 12 && year >= 1900 && year <= 9999) {
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 1);
+                filter.createdAt = {
+                    $gte: startDate,
+                    $lt: endDate,
+                };
+            }
+            else {
+                res.status(400).json({
+                    success: false,
+                    message: "Invalid month or year",
+                });
+                return;
+            }
+        }
+        const visitors = yield visitor_1.default.find(filter)
+            .populate("visitedBy", "name")
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+        const total = yield visitor_1.default.countDocuments(filter);
+        const totalPages = Math.ceil(total / limit);
+        res.status(200).json({
+            success: true,
+            data: visitors,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems: total,
+                itemsPerPage: limit,
+            },
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error fetching visitors",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+});
+exports.getVisitorsOfEmployee = getVisitorsOfEmployee;

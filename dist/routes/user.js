@@ -21,6 +21,7 @@ router.get("/admin-managed-employees/:id", authMiddleware_1.authenticateToken, u
 router.get("/managed-employees/", authMiddleware_1.authenticateToken, user_1.getManagedEmployees);
 router.get("/employee-detail/:userId", authMiddleware_1.authenticateToken, user_1.getEmployeeDetails);
 router.get("/get-visitor", authMiddleware_1.authenticateToken, user_1.getVisitors);
+router.get("/get-visitor/:id", authMiddleware_1.authenticateToken, user_1.getVisitors);
 router.get("/top-employees", user_1.getTopEmployees);
 router.get("/leads", authMiddleware_1.authenticateToken, user_1.getLeads);
 //user file lead
