@@ -14,6 +14,7 @@ router.post("/process-leads", authMiddleware_1.authenticateToken, user_1.process
 //user feedbacks upload
 router.post("/upload-file-leads", authMiddleware_1.authenticateToken, user_1.createLeadsHistory);
 router.patch("/update-employee/:id", authMiddleware_1.authenticateToken, user_1.updateEmployee);
+router.patch("/update-last-working-date", authMiddleware_1.authenticateToken, user_1.updateLastWorkingDate);
 router.put("/reset-password", user_1.resetPassword);
 router.put("/update-target/:id", authMiddleware_1.authenticateToken, user_1.updateTarget);
 router.get("/employees", authMiddleware_1.authenticateToken, user_1.getAllEmployees);

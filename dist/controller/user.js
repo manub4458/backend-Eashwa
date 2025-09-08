@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getVisitorsOfEmployee = exports.getVisitors = exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
+exports.updateLastWorkingDate = exports.getVisitorsOfEmployee = exports.getVisitors = exports.deleteTargetLeadFile = exports.deleteRegularLeadFile = exports.getLeads = exports.getTargetFileUploadHistory = exports.getFileUploadHistory = exports.createLeadsHistory = exports.processExcelAndCreateLeads = exports.addVisitor = exports.getEmployeeDetails = exports.getTopEmployees = exports.updateTarget = exports.getAllEmployees = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.getManagedEmployees = exports.updateEmployee = exports.login = exports.register = void 0;
 const mongoose_1 = require("mongoose");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -1106,3 +1106,59 @@ const getVisitorsOfEmployee = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getVisitorsOfEmployee = getVisitorsOfEmployee;
+const updateLastWorkingDate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId, lastWorkingDate } = req.body;
+        const adminId = req.userId;
+        const admin = yield user_1.default.findById(adminId);
+        if (!admin) {
+            return res
+                .status(403)
+                .json({ success: false, message: "Forbidden: User not found" });
+        }
+        if (!["hr", "admin", "manager"].includes(admin.role)) {
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Insufficient permissions",
+            });
+        }
+        if (!userId || !lastWorkingDate) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID and last working date are required",
+            });
+        }
+        const date = new Date(lastWorkingDate);
+        if (isNaN(date.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid date format for last working date",
+            });
+        }
+        const user = yield user_1.default.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+        user.lastWorkingDate = date;
+        yield user.save();
+        return res.status(200).json({
+            success: true,
+            message: "Last working date updated successfully",
+            data: {
+                userId: user._id,
+                lastWorkingDate: user.lastWorkingDate,
+            },
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error updating last working date",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+});
+exports.updateLastWorkingDate = updateLastWorkingDate;

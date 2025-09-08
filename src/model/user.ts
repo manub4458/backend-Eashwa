@@ -61,6 +61,9 @@ const userSchema = new Schema<IUser>({
     type: String,
     default: "",
   },
+  lastWorkingDate: {
+    type: Date,
+  },
   targetAchieved: {
     battery: {
       current: {

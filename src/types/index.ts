@@ -62,6 +62,7 @@ export interface IUser extends Document {
   phone?: number;
   post?: string;
   joiningDate?: string;
+  lastWorkingDate?: Date;
   targetAchieved?: ITargetAchieved;
   profilePicture?: string;
   visitors?: Types.ObjectId[];

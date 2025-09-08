@@ -73,6 +73,9 @@ const userSchema = new mongoose_1.Schema({
         type: String,
         default: "",
     },
+    lastWorkingDate: {
+        type: Date,
+    },
     targetAchieved: {
         battery: {
             current: {

@@ -37,6 +37,11 @@ interface LeadType {
   isTargetLead?: boolean;
 }
 
+interface UpdateLastWorkingDateRequestBody {
+  userId: string;
+  lastWorkingDate: string;
+}
+
 export const register = async (
   req: Request,
   res: Response,
@@ -1316,6 +1321,71 @@ export const getVisitorsOfEmployee = async (
     res.status(500).json({
       success: false,
       message: "Error fetching visitors",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export const updateLastWorkingDate = async (
+  req: Request<{}, {}, UpdateLastWorkingDateRequestBody>,
+  res: Response
+): Promise<Response> => {
+  try {
+    const { userId, lastWorkingDate } = req.body;
+    const adminId = (req as any).userId;
+
+    const admin = await User.findById(adminId);
+    if (!admin) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Forbidden: User not found" });
+    }
+
+    if (!["hr", "admin", "manager"].includes(admin.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "Forbidden: Insufficient permissions",
+      });
+    }
+
+    if (!userId || !lastWorkingDate) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID and last working date are required",
+      });
+    }
+
+    const date = new Date(lastWorkingDate);
+    if (isNaN(date.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date format for last working date",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    user.lastWorkingDate = date;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Last working date updated successfully",
+      data: {
+        userId: user._id,
+        lastWorkingDate: user.lastWorkingDate,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Error updating last working date",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

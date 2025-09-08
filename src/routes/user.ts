@@ -21,6 +21,7 @@ import {
   updateEmployee,
   getManagedEmployees,
   getVisitorsOfEmployee,
+  updateLastWorkingDate,
 } from "../controller/user";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -36,6 +37,11 @@ router.post("/process-leads", authenticateToken, processExcelAndCreateLeads);
 //user feedbacks upload
 router.post("/upload-file-leads", authenticateToken, createLeadsHistory);
 router.patch("/update-employee/:id", authenticateToken, updateEmployee);
+router.patch(
+  "/update-last-working-date",
+  authenticateToken,
+  updateLastWorkingDate
+);
 router.put("/reset-password", resetPassword);
 router.put("/update-target/:id", authenticateToken, updateTarget);
 router.get("/employees", authenticateToken, getAllEmployees);
