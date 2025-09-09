@@ -36,6 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.findOrderBySid = exports.findOrderById = exports.updateOrder = exports.findOrderByPiNumber = exports.createOrder = void 0;
+const mongoose_1 = require("mongoose");
 const notificationService = __importStar(require("./notificationService"));
 const order_1 = __importDefault(require("../model/order"));
 const createOrder = (data) => __awaiter(void 0, void 0, void 0, function* () {
@@ -60,7 +61,7 @@ const findOrderBySid = (sid) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.findOrderBySid = findOrderBySid;
 const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...args_1], void 0, function* (userId, page = 1, limit = 10, month, orderId, sortBy) {
-    const query = { submittedBy: userId };
+    const query = { submittedBy: new mongoose_1.Types.ObjectId(userId) }; // Explicitly convert to ObjectId for safety
     if (month) {
         const [year, monthNum] = month.split("-");
         const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
@@ -77,62 +78,46 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
     if (sortBy === "pending_first") {
         // Prioritize "pending" status first, then other statuses, and sort by createdAt within each status
         sortOption = [
-            [
-                {
-                    $addFields: {
-                        statusOrder: {
-                            $switch: {
-                                branches: [
-                                    { case: { $eq: ["$status", "pending"] }, then: 1 },
-                                    {
-                                        case: { $eq: ["$status", "pending_verification"] },
-                                        then: 2,
-                                    },
-                                    { case: { $eq: ["$status", "payment_received"] }, then: 3 },
-                                    {
-                                        case: { $eq: ["$status", "payment_not_received"] },
-                                        then: 4,
-                                    },
-                                    { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
-                                    { case: { $eq: ["$status", "completed"] }, then: 6 },
-                                ],
-                                default: 7, // Fallback for any unexpected status
-                            },
+            {
+                $addFields: {
+                    statusOrder: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$status", "pending"] }, then: 1 },
+                                { case: { $eq: ["$status", "pending_verification"] }, then: 2 },
+                                { case: { $eq: ["$status", "payment_received"] }, then: 3 },
+                                { case: { $eq: ["$status", "payment_not_received"] }, then: 4 },
+                                { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
+                                { case: { $eq: ["$status", "completed"] }, then: 6 },
+                            ],
+                            default: 7, // Fallback for any unexpected status
                         },
                     },
                 },
-            ],
+            },
             { $sort: { statusOrder: 1, createdAt: -1 } }, // Sort by statusOrder (ascending) and createdAt (descending)
         ];
     }
     else if (sortBy === "delivered_first") {
-        // Keep existing logic for delivered_first
+        // Prioritize "completed" status first
         sortOption = [
-            [
-                {
-                    $addFields: {
-                        statusOrder: {
-                            $switch: {
-                                branches: [
-                                    { case: { $eq: ["$status", "completed"] }, then: 1 },
-                                    { case: { $eq: ["$status", "pending"] }, then: 2 },
-                                    {
-                                        case: { $eq: ["$status", "pending_verification"] },
-                                        then: 3,
-                                    },
-                                    { case: { $eq: ["$status", "payment_received"] }, then: 4 },
-                                    {
-                                        case: { $eq: ["$status", "payment_not_received"] },
-                                        then: 5,
-                                    },
-                                    { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
-                                ],
-                                default: 7,
-                            },
+            {
+                $addFields: {
+                    statusOrder: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$status", "completed"] }, then: 1 },
+                                { case: { $eq: ["$status", "pending"] }, then: 2 },
+                                { case: { $eq: ["$status", "pending_verification"] }, then: 3 },
+                                { case: { $eq: ["$status", "payment_received"] }, then: 4 },
+                                { case: { $eq: ["$status", "payment_not_received"] }, then: 5 },
+                                { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
+                            ],
+                            default: 7,
                         },
                     },
                 },
-            ],
+            },
             { $sort: { statusOrder: 1, createdAt: -1 } },
         ];
     }
@@ -177,65 +162,50 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
     if (orderId) {
         query.orderId = { $regex: orderId, $options: "i" };
     }
-    let sortOption = { createdAt: -1 };
+    let sortOption = { createdAt: -1 }; // Default: sort by recency (latest first)
     if (sortBy === "pending_first") {
+        // Prioritize "pending" status first, then other statuses, and sort by createdAt within each status
         sortOption = [
-            [
-                {
-                    $addFields: {
-                        statusOrder: {
-                            $switch: {
-                                branches: [
-                                    { case: { $eq: ["$status", "pending"] }, then: 1 },
-                                    {
-                                        case: { $eq: ["$status", "pending_verification"] },
-                                        then: 2,
-                                    },
-                                    { case: { $eq: ["$status", "payment_received"] }, then: 3 },
-                                    {
-                                        case: { $eq: ["$status", "payment_not_received"] },
-                                        then: 4,
-                                    },
-                                    { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
-                                    { case: { $eq: ["$status", "completed"] }, then: 6 },
-                                ],
-                                default: 7,
-                            },
+            {
+                $addFields: {
+                    statusOrder: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$status", "pending"] }, then: 1 },
+                                { case: { $eq: ["$status", "pending_verification"] }, then: 2 },
+                                { case: { $eq: ["$status", "payment_received"] }, then: 3 },
+                                { case: { $eq: ["$status", "payment_not_received"] }, then: 4 },
+                                { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
+                                { case: { $eq: ["$status", "completed"] }, then: 6 },
+                            ],
+                            default: 7, // Fallback for any unexpected status
                         },
                     },
                 },
-            ],
-            { $sort: { statusOrder: 1, createdAt: -1 } },
+            },
+            { $sort: { statusOrder: 1, createdAt: -1 } }, // Sort by statusOrder (ascending) and createdAt (descending)
         ];
     }
     else if (sortBy === "delivered_first") {
         // Prioritize "completed" status first
         sortOption = [
-            [
-                {
-                    $addFields: {
-                        statusOrder: {
-                            $switch: {
-                                branches: [
-                                    { case: { $eq: ["$status", "completed"] }, then: 1 },
-                                    { case: { $eq: ["$status", "pending"] }, then: 2 },
-                                    {
-                                        case: { $eq: ["$status", "pending_verification"] },
-                                        then: 3,
-                                    },
-                                    { case: { $eq: ["$status", "payment_received"] }, then: 4 },
-                                    {
-                                        case: { $eq: ["$status", "payment_not_received"] },
-                                        then: 5,
-                                    },
-                                    { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
-                                ],
-                                default: 7,
-                            },
+            {
+                $addFields: {
+                    statusOrder: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$status", "completed"] }, then: 1 },
+                                { case: { $eq: ["$status", "pending"] }, then: 2 },
+                                { case: { $eq: ["$status", "pending_verification"] }, then: 3 },
+                                { case: { $eq: ["$status", "payment_received"] }, then: 4 },
+                                { case: { $eq: ["$status", "payment_not_received"] }, then: 5 },
+                                { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
+                            ],
+                            default: 7,
                         },
                     },
                 },
-            ],
+            },
             { $sort: { statusOrder: 1, createdAt: -1 } },
         ];
     }
