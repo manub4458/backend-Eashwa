@@ -74,10 +74,22 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
     if (orderId) {
         query.orderId = { $regex: orderId, $options: "i" };
     }
-    let sortOption = { createdAt: -1 }; // Default: sort by recency (latest first)
+    // Add a field to handle priority sorting with null values at the end
+    const addPriorityField = {
+        $addFields: {
+            sortPriority: {
+                $cond: {
+                    if: { $eq: ["$priority", null] },
+                    then: Number.MAX_SAFE_INTEGER, // Push null values to the end
+                    else: "$priority",
+                },
+            },
+        },
+    };
+    let sortStages = [];
     if (sortBy === "pending_first") {
-        // Prioritize "pending" status first, then other statuses, and sort by createdAt within each status
-        sortOption = [
+        sortStages = [
+            addPriorityField,
             {
                 $addFields: {
                     statusOrder: {
@@ -90,17 +102,17 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
                                 { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
                                 { case: { $eq: ["$status", "completed"] }, then: 6 },
                             ],
-                            default: 7, // Fallback for any unexpected status
+                            default: 7,
                         },
                     },
                 },
             },
-            { $sort: { statusOrder: 1, createdAt: -1 } }, // Sort by statusOrder (ascending) and createdAt (descending)
+            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
         ];
     }
     else if (sortBy === "delivered_first") {
-        // Prioritize "completed" status first
-        sortOption = [
+        sortStages = [
+            addPriorityField,
             {
                 $addFields: {
                     statusOrder: {
@@ -118,16 +130,24 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
                     },
                 },
             },
-            { $sort: { statusOrder: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+        ];
+    }
+    else {
+        // Default sorting: priority first (with nulls last), then by recency
+        sortStages = [
+            addPriorityField,
+            { $sort: { sortPriority: 1, createdAt: -1 } },
         ];
     }
     const skip = (page - 1) * limit;
     const [orders, totalOrders] = yield Promise.all([
         order_1.default.aggregate([
             { $match: query },
-            ...(Array.isArray(sortOption) ? sortOption : [{ $sort: sortOption }]),
+            ...sortStages,
             { $skip: skip },
             { $limit: limit },
+            { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
         ]),
         order_1.default.countDocuments(query),
     ]);
@@ -162,10 +182,22 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
     if (orderId) {
         query.orderId = { $regex: orderId, $options: "i" };
     }
-    let sortOption = { createdAt: -1 }; // Default: sort by recency (latest first)
+    // Add a field to handle priority sorting with null values at the end
+    const addPriorityField = {
+        $addFields: {
+            sortPriority: {
+                $cond: {
+                    if: { $eq: ["$priority", null] },
+                    then: Number.MAX_SAFE_INTEGER, // Push null values to the end
+                    else: "$priority",
+                },
+            },
+        },
+    };
+    let sortStages = [];
     if (sortBy === "pending_first") {
-        // Prioritize "pending" status first, then other statuses, and sort by createdAt within each status
-        sortOption = [
+        sortStages = [
+            addPriorityField,
             {
                 $addFields: {
                     statusOrder: {
@@ -178,17 +210,17 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
                                 { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
                                 { case: { $eq: ["$status", "completed"] }, then: 6 },
                             ],
-                            default: 7, // Fallback for any unexpected status
+                            default: 7,
                         },
                     },
                 },
             },
-            { $sort: { statusOrder: 1, createdAt: -1 } }, // Sort by statusOrder (ascending) and createdAt (descending)
+            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
         ];
     }
     else if (sortBy === "delivered_first") {
-        // Prioritize "completed" status first
-        sortOption = [
+        sortStages = [
+            addPriorityField,
             {
                 $addFields: {
                     statusOrder: {
@@ -206,16 +238,24 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
                     },
                 },
             },
-            { $sort: { statusOrder: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+        ];
+    }
+    else {
+        // Default sorting: priority first (with nulls last), then by recency
+        sortStages = [
+            addPriorityField,
+            { $sort: { sortPriority: 1, createdAt: -1 } },
         ];
     }
     const skip = (page - 1) * limit;
     const [orders, totalOrders] = yield Promise.all([
         order_1.default.aggregate([
             { $match: query },
-            ...(Array.isArray(sortOption) ? sortOption : [{ $sort: sortOption }]),
+            ...sortStages,
             { $skip: skip },
             { $limit: limit },
+            { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
         ]),
         order_1.default.countDocuments(query),
     ]);
