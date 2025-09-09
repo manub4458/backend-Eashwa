@@ -59,27 +59,84 @@ export const getMyOrders = async (
     query.orderId = { $regex: orderId, $options: "i" };
   }
 
-  let sortOption: any = { createdAt: -1 };
+  let sortOption: any = { createdAt: -1 }; // Default: sort by recency (latest first)
   if (sortBy === "pending_first") {
-    sortOption = { pendency: -1, createdAt: -1 };
+    // Prioritize "pending" status first, then other statuses, and sort by createdAt within each status
+    sortOption = [
+      [
+        {
+          $addFields: {
+            statusOrder: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "pending"] }, then: 1 },
+                  {
+                    case: { $eq: ["$status", "pending_verification"] },
+                    then: 2,
+                  },
+                  { case: { $eq: ["$status", "payment_received"] }, then: 3 },
+                  {
+                    case: { $eq: ["$status", "payment_not_received"] },
+                    then: 4,
+                  },
+                  { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
+                  { case: { $eq: ["$status", "completed"] }, then: 6 },
+                ],
+                default: 7, // Fallback for any unexpected status
+              },
+            },
+          },
+        },
+      ],
+      { $sort: { statusOrder: 1, createdAt: -1 } }, // Sort by statusOrder (ascending) and createdAt (descending)
+    ];
   } else if (sortBy === "delivered_first") {
-    sortOption = {
-      status: 1,
-      createdAt: -1,
-    };
+    // Keep existing logic for delivered_first
+    sortOption = [
+      [
+        {
+          $addFields: {
+            statusOrder: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "completed"] }, then: 1 },
+                  { case: { $eq: ["$status", "pending"] }, then: 2 },
+                  {
+                    case: { $eq: ["$status", "pending_verification"] },
+                    then: 3,
+                  },
+                  { case: { $eq: ["$status", "payment_received"] }, then: 4 },
+                  {
+                    case: { $eq: ["$status", "payment_not_received"] },
+                    then: 5,
+                  },
+                  { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
+                ],
+                default: 7,
+              },
+            },
+          },
+        },
+      ],
+      { $sort: { statusOrder: 1, createdAt: -1 } },
+    ];
   }
 
   const skip = (page - 1) * limit;
 
   const [orders, totalOrders] = await Promise.all([
-    Order.find(query).sort(sortOption).skip(skip).limit(limit).lean(),
+    Order.aggregate([
+      { $match: query },
+      ...(Array.isArray(sortOption) ? sortOption : [{ $sort: sortOption }]),
+      { $skip: skip },
+      { $limit: limit },
+    ]),
     Order.countDocuments(query),
   ]);
 
   const totalPages = Math.ceil(totalOrders / limit);
 
   return {
-    //@ts-ignore
     orders,
     totalPages,
     totalOrders,
@@ -109,7 +166,6 @@ export const getAllOrders = async (
 }> => {
   const query: any = {};
 
-  // Month filter (YYYY-MM format)
   if (month) {
     const [year, monthNum] = month.split("-");
     const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
@@ -120,49 +176,87 @@ export const getAllOrders = async (
     };
   }
 
-  // Order ID filter
   if (orderId) {
     query.orderId = { $regex: orderId, $options: "i" };
   }
 
-  // Sorting logic
-  let sortOption: any;
+  let sortOption: any = { createdAt: -1 };
   if (sortBy === "pending_first") {
-    sortOption = { pendency: -1, createdAt: -1 };
-  } else if (sortBy === "delivered_first") {
-    sortOption = { status: 1, createdAt: -1 };
-  } else {
-    // Default sort: priority asc (nulls last), then createdAt desc
     sortOption = [
-      { $sort: { priority: 1, createdAt: -1 } },
-      {
-        $addFields: {
-          priority: { $ifNull: ["$priority", Number.MAX_SAFE_INTEGER] },
+      [
+        {
+          $addFields: {
+            statusOrder: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "pending"] }, then: 1 },
+                  {
+                    case: { $eq: ["$status", "pending_verification"] },
+                    then: 2,
+                  },
+                  { case: { $eq: ["$status", "payment_received"] }, then: 3 },
+                  {
+                    case: { $eq: ["$status", "payment_not_received"] },
+                    then: 4,
+                  },
+                  { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 5 },
+                  { case: { $eq: ["$status", "completed"] }, then: 6 },
+                ],
+                default: 7,
+              },
+            },
+          },
         },
-      },
-      { $sort: { priority: 1, createdAt: -1 } },
+      ],
+      { $sort: { statusOrder: 1, createdAt: -1 } },
+    ];
+  } else if (sortBy === "delivered_first") {
+    // Prioritize "completed" status first
+    sortOption = [
+      [
+        {
+          $addFields: {
+            statusOrder: {
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "completed"] }, then: 1 },
+                  { case: { $eq: ["$status", "pending"] }, then: 2 },
+                  {
+                    case: { $eq: ["$status", "pending_verification"] },
+                    then: 3,
+                  },
+                  { case: { $eq: ["$status", "payment_received"] }, then: 4 },
+                  {
+                    case: { $eq: ["$status", "payment_not_received"] },
+                    then: 5,
+                  },
+                  { case: { $eq: ["$status", "ready_for_dispatch"] }, then: 6 },
+                ],
+                default: 7,
+              },
+            },
+          },
+        },
+      ],
+      { $sort: { statusOrder: 1, createdAt: -1 } },
     ];
   }
 
   const skip = (page - 1) * limit;
 
   const [orders, totalOrders] = await Promise.all([
-    // Use aggregation for default sort to handle nulls last
-    sortBy === "pending_first" || sortBy === "delivered_first"
-      ? Order.find(query).sort(sortOption).skip(skip).limit(limit).lean()
-      : Order.aggregate([
-          { $match: query },
-          ...sortOption,
-          { $skip: skip },
-          { $limit: limit },
-        ]),
+    Order.aggregate([
+      { $match: query },
+      ...(Array.isArray(sortOption) ? sortOption : [{ $sort: sortOption }]),
+      { $skip: skip },
+      { $limit: limit },
+    ]),
     Order.countDocuments(query),
   ]);
 
   const totalPages = Math.ceil(totalOrders / limit);
 
   return {
-    //@ts-ignore
     orders,
     totalPages,
     totalOrders,
