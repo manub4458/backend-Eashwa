@@ -107,7 +107,7 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
                     },
                 },
             },
-            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, createdAt: 1 } },
         ];
     }
     else if (sortBy === "delivered_first") {
@@ -130,14 +130,14 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
                     },
                 },
             },
-            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, createdAt: 1 } },
         ];
     }
     else {
         // Default sorting: priority first (with nulls last), then by recency
         sortStages = [
             addPriorityField,
-            { $sort: { sortPriority: 1, createdAt: -1 } },
+            { $sort: { createdAt: 1 } },
         ];
     }
     const skip = (page - 1) * limit;
@@ -147,7 +147,7 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
             ...sortStages,
             { $skip: skip },
             { $limit: limit },
-            { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
+            { $project: { statusOrder: 0 } }, // Remove temporary fields
         ]),
         order_1.default.countDocuments(query),
     ]);
@@ -215,7 +215,7 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
                     },
                 },
             },
-            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, createdAt: 1 } },
         ];
     }
     else if (sortBy === "delivered_first") {
@@ -238,14 +238,14 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
                     },
                 },
             },
-            { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+            { $sort: { statusOrder: 1, createdAt: 1 } },
         ];
     }
     else {
         // Default sorting: priority first (with nulls last), then by recency
         sortStages = [
             addPriorityField,
-            { $sort: { sortPriority: 1, createdAt: -1 } },
+            { $sort: { createdAt: 1 } },
         ];
     }
     const skip = (page - 1) * limit;
@@ -255,7 +255,7 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
             ...sortStages,
             { $skip: skip },
             { $limit: limit },
-            { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
+            { $project: { statusOrder: 0 } },
         ]),
         order_1.default.countDocuments(query),
     ]);

@@ -93,7 +93,7 @@ export const getMyOrders = async (
           },
         },
       },
-      { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+      { $sort: { statusOrder: 1, createdAt: 1 } },
     ];
   } else if (sortBy === "delivered_first") {
     sortStages = [
@@ -115,13 +115,13 @@ export const getMyOrders = async (
           },
         },
       },
-      { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+      { $sort: { statusOrder: 1, createdAt: 1 } },
     ];
   } else {
     // Default sorting: priority first (with nulls last), then by recency
     sortStages = [
       addPriorityField,
-      { $sort: { sortPriority: 1, createdAt: -1 } },
+      { $sort: {  createdAt: 1 } },
     ];
   }
 
@@ -133,7 +133,7 @@ export const getMyOrders = async (
       ...sortStages,
       { $skip: skip },
       { $limit: limit },
-      { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
+      { $project: {  statusOrder: 0 } }, // Remove temporary fields
     ]),
     Order.countDocuments(query),
   ]);
@@ -218,7 +218,7 @@ export const getAllOrders = async (
           },
         },
       },
-      { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+      { $sort: { statusOrder: 1, createdAt: 1 } },
     ];
   } else if (sortBy === "delivered_first") {
     sortStages = [
@@ -240,13 +240,13 @@ export const getAllOrders = async (
           },
         },
       },
-      { $sort: { statusOrder: 1, sortPriority: 1, createdAt: -1 } },
+      { $sort: { statusOrder: 1, createdAt: 1 } },
     ];
   } else {
     // Default sorting: priority first (with nulls last), then by recency
     sortStages = [
       addPriorityField,
-      { $sort: { sortPriority: 1, createdAt: -1 } },
+      { $sort: { createdAt: 1 } },
     ];
   }
 
@@ -258,7 +258,7 @@ export const getAllOrders = async (
       ...sortStages,
       { $skip: skip },
       { $limit: limit },
-      { $project: { sortPriority: 0, statusOrder: 0 } }, // Remove temporary fields
+      { $project: { statusOrder: 0 } }, 
     ]),
     Order.countDocuments(query),
   ]);
