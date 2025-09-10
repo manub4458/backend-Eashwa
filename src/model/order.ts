@@ -35,11 +35,13 @@ const orderSchema = new Schema<IOrder>(
     driverNumber: { type: String },
     vehicleNumber: { type: String },
     transporterName: {type: String},
+    remark: {type: String},
     pendingReason :{ type :String, default: "" },
     accountsMessageSid: { type: String },
     reminderSent: { type: Boolean, default: false },
     priority: { type: Number, default: null },
-
+    remarkQuerySid: { type: String }, 
+    remarkInputSid: { type: String },  
   },
   { timestamps: true }
 );
@@ -52,5 +54,4 @@ orderSchema.set("toObject", { virtuals: true });
 orderSchema.set("toJSON", { virtuals: true });
 
 const Order = model<IOrder>("Order", orderSchema);
-
 export default Order;

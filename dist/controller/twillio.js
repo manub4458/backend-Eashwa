@@ -41,6 +41,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const messageUser_1 = __importDefault(require("../model/messageUser"));
 const orderService = __importStar(require("../services/orderService"));
 const notificationService = __importStar(require("../services/notificationService"));
+const order_1 = __importDefault(require("../model/order"));
 dotenv_1.default.config();
 const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -109,12 +110,14 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.submitRequest = submitRequest;
 const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
+    const originalBody = req.body.Body ? req.body.Body.trim() : "";
+    const messageFromAdmin = originalBody.toLowerCase();
     const body = req.body;
     const reply = body.Body ? body.Body.toLowerCase().trim() : "";
     const repliedSid = body.OriginalRepliedMessageSid;
+    const fromNumber = req.body.From;
     try {
-        const order = yield orderService.findOrderBySid(repliedSid);
+        let order = yield orderService.findOrderBySid(repliedSid);
         if (order && (reply === "received" || reply === "not received")) {
             if (reply === "received") {
                 const orderId = `ORD-${Date.now()}`;
@@ -122,11 +125,21 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 const updatedOrder = yield orderService.updateOrder(order._id, {
                     status: "ready_for_dispatch",
                     orderId,
+                    remark: "",
                 });
                 yield notificationService.sendNotificationToUser(order.submittedBy, "Your payment has been received.", "HX1449433d60e7fe1ddfbb333486d928cf");
                 if (updatedOrder) {
                     yield notificationService.sendDispatchNotification(updatedOrder);
                 }
+                const remarkInputMessage = yield client.messages.create({
+                    from: "whatsapp:+919911130173",
+                    to: fromNumber,
+                    contentSid: "HX77b39830b7781c29e1b9bee6eb2d3702",
+                });
+                //@ts-ignore
+                yield orderService.updateOrder(order._id, {
+                    remarkInputSid: remarkInputMessage.sid,
+                });
             }
             else if (reply === "not received") {
                 //@ts-ignore
@@ -138,6 +151,19 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
             res.send("<Response></Response>");
             return;
         }
+        if (!order) {
+            order = yield order_1.default.findOne({ remarkInputSid: repliedSid });
+            if (order && messageFromAdmin.startsWith("remark:")) {
+                const remark = originalBody.replace(/^remark\s*:\s*/i, "").trim();
+                //@ts-ignore
+                yield orderService.updateOrder(order._id, {
+                    remark,
+                    remarkInputSid: null,
+                });
+                res.send("<Response></Response>");
+                return;
+            }
+        }
         let messageWhatsapp = yield messageUser_1.default.findOne({
             messageId: body.OriginalRepliedMessageSid,
         });
@@ -146,12 +172,6 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
                 secondMessageId: body.OriginalRepliedMessageSid,
             });
         }
-        // let messageWhatsapp = await messageUser.findOne({ messageId: repliedSid });
-        // if (!messageWhatsapp) {
-        //   messageWhatsapp = await messageUser.findOne({
-        //     secondMessageId: repliedSid,
-        //   });
-        // }
         if (messageFromAdmin === "accept") {
             yield client.messages.create({
                 from: "whatsapp:+919911130173",
@@ -271,47 +291,3 @@ const whatsappWebhook = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.whatsappWebhook = whatsappWebhook;
-// export const webhook = async (req: Request, res: Response): Promise<void> => {
-//   const body = req.body;
-//   const reply = body.Body ? body.Body.toLowerCase().trim() : "";
-//   const repliedSid = body.OriginalRepliedMessageSid;
-//   if (!repliedSid || !reply) {
-//     res.send("<Response></Response>");
-//     return;
-//   }
-//   try {
-//     const order = await orderService.findOrderBySid(repliedSid);
-//     if (!order) {
-//       res.send("<Response></Response>");
-//       return;
-//     }
-//     if (reply === "received") {
-//       const orderId = `ORD-${Date.now()}`;
-//       //@ts-ignore
-//       const updatedOrder = await orderService.updateOrder(order._id, {
-//         status: "ready_for_dispatch",
-//         orderId,
-//       });
-//       await notificationService.sendNotificationToUser(
-//         order.submittedBy.toString(),
-//         "Your payment has been received."
-//       );
-//       if (updatedOrder) {
-//         await notificationService.sendDispatchNotification(updatedOrder);
-//       }
-//     } else if (reply === "not received") {
-//       //@ts-ignore
-//       await orderService.updateOrder(order._id, {
-//         status: "payment_not_received",
-//       });
-//       await notificationService.sendNotificationToUser(
-//         order.submittedBy.toString(),
-//         "Payment not received. Please check with Accounts Department."
-//       );
-//     }
-//     res.send("<Response></Response>");
-//   } catch (error) {
-//     console.error("Webhook error:", error);
-//     res.status(500).send("<Response></Response>");
-//   }
-// };

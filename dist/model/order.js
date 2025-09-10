@@ -34,10 +34,13 @@ const orderSchema = new mongoose_1.Schema({
     driverNumber: { type: String },
     vehicleNumber: { type: String },
     transporterName: { type: String },
+    remark: { type: String },
     pendingReason: { type: String, default: "" },
     accountsMessageSid: { type: String },
     reminderSent: { type: Boolean, default: false },
     priority: { type: Number, default: null },
+    remarkQuerySid: { type: String },
+    remarkInputSid: { type: String },
 }, { timestamps: true });
 orderSchema.virtual("pendency").get(function () {
     return this.deadline < new Date() && this.status !== "completed";

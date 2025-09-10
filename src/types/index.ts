@@ -162,4 +162,7 @@ export interface IOrder extends Document {
   priority: number;
   transporterName?: string;
   pendingReason?: string;
+  remark?: String;
+  remarkQuerySid?:String;
+  remarkInputSid?:String;
 }

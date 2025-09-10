@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import messageUser from "../model/messageUser";
 import * as orderService from "../services/orderService";
 import * as notificationService from "../services/notificationService";
+import Order from "../model/order";
 
 dotenv.config();
 
@@ -94,13 +95,14 @@ export const whatsappWebhook = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const messageFromAdmin = req.body.Body ? req.body.Body.toLowerCase() : "";
+  const originalBody = req.body.Body ? req.body.Body.trim() : "";
+  const messageFromAdmin = originalBody.toLowerCase();
   const body = req.body;
   const reply = body.Body ? body.Body.toLowerCase().trim() : "";
   const repliedSid = body.OriginalRepliedMessageSid;
-
+  const fromNumber = req.body.From;
   try {
-    const order = await orderService.findOrderBySid(repliedSid);
+    let order = await orderService.findOrderBySid(repliedSid);
     if (order && (reply === "received" || reply === "not received")) {
       if (reply === "received") {
         const orderId = `ORD-${Date.now()}`;
@@ -108,6 +110,7 @@ export const whatsappWebhook = async (
         const updatedOrder = await orderService.updateOrder(order._id, {
           status: "ready_for_dispatch",
           orderId,
+          remark: "",
         });
         await notificationService.sendNotificationToUser(
           order.submittedBy,
@@ -117,6 +120,15 @@ export const whatsappWebhook = async (
         if (updatedOrder) {
           await notificationService.sendDispatchNotification(updatedOrder);
         }
+        const remarkInputMessage = await client.messages.create({
+          from: "whatsapp:+919911130173",
+          to: fromNumber,
+          contentSid: "HX77b39830b7781c29e1b9bee6eb2d3702",
+        });
+        //@ts-ignore
+        await orderService.updateOrder(order._id, {
+          remarkInputSid: remarkInputMessage.sid,
+        });
       } else if (reply === "not received") {
         //@ts-ignore
         await orderService.updateOrder(order._id, {
@@ -131,7 +143,19 @@ export const whatsappWebhook = async (
       res.send("<Response></Response>");
       return;
     }
-
+    if (!order) {
+      order = await Order.findOne({ remarkInputSid: repliedSid });
+      if (order && messageFromAdmin.startsWith("remark:")) {
+        const remark = originalBody.replace(/^remark\s*:\s*/i, "").trim();
+        //@ts-ignore
+        await orderService.updateOrder(order._id, {
+          remark,
+          remarkInputSid: null,
+        });
+        res.send("<Response></Response>");
+        return;
+      }
+    }
     let messageWhatsapp: typeof messageUser | null = await messageUser.findOne({
       messageId: body.OriginalRepliedMessageSid,
     });
@@ -140,13 +164,6 @@ export const whatsappWebhook = async (
         secondMessageId: body.OriginalRepliedMessageSid,
       });
     }
-    // let messageWhatsapp = await messageUser.findOne({ messageId: repliedSid });
-    // if (!messageWhatsapp) {
-    //   messageWhatsapp = await messageUser.findOne({
-    //     secondMessageId: repliedSid,
-    //   });
-    // }
-
     if (messageFromAdmin === "accept") {
       await client.messages.create({
         from: "whatsapp:+919911130173",
@@ -182,7 +199,6 @@ export const whatsappWebhook = async (
           "5": `₹${messageWhatsapp?.amount}`,
         }),
       });
-
       if (req.body.From === "whatsapp:+917723866666") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
@@ -198,7 +214,6 @@ export const whatsappWebhook = async (
           contentSid: "HXb5947d790365975417f2bcc62852ab88",
         });
       }
-
       res.status(200).send("<Response></Response>");
     } else if (messageFromAdmin === "reject") {
       await client.messages.create({
@@ -206,7 +221,6 @@ export const whatsappWebhook = async (
         to: `${req.body.From}`,
         contentSid: "HXc4e1cf97fcc0a1434c8154b59aa99b9a",
       });
-
       res.status(200).send("<Response></Response>");
     } else if (messageFromAdmin.startsWith("reason:")) {
       const rejectionReason = messageFromAdmin
@@ -230,7 +244,6 @@ export const whatsappWebhook = async (
           "6": `₹${messageWhatsapp?.amount}`,
         }),
       });
-
       if (req.body.From === "whatsapp:+917723866666") {
         await client.messages.create({
           from: "whatsapp:+919911130173",
@@ -252,7 +265,6 @@ export const whatsappWebhook = async (
           }),
         });
       }
-
       res.status(200).send("<Response></Response>");
     } else {
       res.status(200).send("<Response></Response>");
@@ -264,52 +276,3 @@ export const whatsappWebhook = async (
       .json({ success: false, message: "Failed to process admin response." });
   }
 };
-
-// export const webhook = async (req: Request, res: Response): Promise<void> => {
-//   const body = req.body;
-//   const reply = body.Body ? body.Body.toLowerCase().trim() : "";
-//   const repliedSid = body.OriginalRepliedMessageSid;
-
-//   if (!repliedSid || !reply) {
-//     res.send("<Response></Response>");
-//     return;
-//   }
-
-//   try {
-//     const order = await orderService.findOrderBySid(repliedSid);
-//     if (!order) {
-//       res.send("<Response></Response>");
-//       return;
-//     }
-
-//     if (reply === "received") {
-//       const orderId = `ORD-${Date.now()}`;
-//       //@ts-ignore
-//       const updatedOrder = await orderService.updateOrder(order._id, {
-//         status: "ready_for_dispatch",
-//         orderId,
-//       });
-//       await notificationService.sendNotificationToUser(
-//         order.submittedBy.toString(),
-//         "Your payment has been received."
-//       );
-//       if (updatedOrder) {
-//         await notificationService.sendDispatchNotification(updatedOrder);
-//       }
-//     } else if (reply === "not received") {
-//       //@ts-ignore
-//       await orderService.updateOrder(order._id, {
-//         status: "payment_not_received",
-//       });
-//       await notificationService.sendNotificationToUser(
-//         order.submittedBy.toString(),
-//         "Payment not received. Please check with Accounts Department."
-//       );
-//     }
-
-//     res.send("<Response></Response>");
-//   } catch (error) {
-//     console.error("Webhook error:", error);
-//     res.status(500).send("<Response></Response>");
-//   }
-// };
