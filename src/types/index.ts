@@ -166,3 +166,26 @@ export interface IOrder extends Document {
   remarkQuerySid?:String;
   remarkInputSid?:String;
 }
+
+export interface ITicket extends Document {
+  ticketId: number;
+  dealerName: string;
+  dealerPhone: string;
+  location: string;
+  showroomName: string;
+  agentName: string;
+  agentPhone: string;
+  complaintRegarding: string[];
+  purchaseDate: Date;
+  complainDate: Date;
+  warrantyStatus: "In Warranty" | "Out of Warranty";
+  remark: string;
+  status: "Pending" | "Complete" | "Out of Warranty";
+  statusRemark?: string;
+  submittedBy: Types.ObjectId;
+}
+
+export interface ICounter extends Document {
+  name: string;
+  seq: number;
+}
