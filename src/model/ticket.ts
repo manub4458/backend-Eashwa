@@ -24,7 +24,7 @@ const ticketSchema = new Schema<ITicket>(
     complainDate: { type: Date, default: Date.now },
     warrantyStatus: {
       type: String,
-      enum: ["In Warranty", "Out of Warranty"],
+      enum: ["In Warranty", "Out of Warranty", "Dispatch Problem"],
       required: true,
     },
     remark: { type: String },

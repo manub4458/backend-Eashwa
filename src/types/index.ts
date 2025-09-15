@@ -178,7 +178,7 @@ export interface ITicket extends Document {
   complaintRegarding: string[];
   purchaseDate: Date;
   complainDate: Date;
-  warrantyStatus: "In Warranty" | "Out of Warranty";
+  warrantyStatus: "In Warranty" | "Out of Warranty" | "Dispatch Problem";
   remark: string;
   status: "Pending" | "Complete" | "Out of Warranty";
   statusRemark?: string;
