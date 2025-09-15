@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 
-export type Role = "admin" | "employee" | "hr";
+export type Role = "admin" | "employee" | "hr" | "manager" | "admin-plant";
 
 export interface TargetAchieved {
   total: number;
@@ -163,8 +163,8 @@ export interface IOrder extends Document {
   transporterName?: string;
   pendingReason?: string;
   remark?: String;
-  remarkQuerySid?:String;
-  remarkInputSid?:String;
+  remarkQuerySid?: String;
+  remarkInputSid?: String;
 }
 
 export interface ITicket extends Document {

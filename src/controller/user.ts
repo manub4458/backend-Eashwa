@@ -69,11 +69,11 @@ export const register = async (
     if (!role) {
       return res.status(407).json({ message: "role is required" });
     }
-    if (!pass.test(password.toString())) {
-      return res.status(407).json({
-        message: "Enter valid password with uppercase, lowercase, number & @",
-      });
-    }
+    // if (!pass.test(password.toString())) {
+    //   return res.status(407).json({
+    //     message: "Enter valid password with uppercase, lowercase, number & @",
+    //   });
+    // }
     if (!expression.test(email.toString())) {
       return res.status(407).json({ message: "Enter valid email" });
     }
