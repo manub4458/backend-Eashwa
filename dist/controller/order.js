@@ -35,10 +35,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOrderPriority = exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.markPending = exports.deliverOrder = exports.submitOrder = void 0;
+exports.deleteOrder = exports.updateOrder = exports.updateOrderPriority = exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.markPending = exports.deliverOrder = exports.submitOrder = void 0;
 const orderService = __importStar(require("../services/orderService"));
 const notificationService = __importStar(require("../services/notificationService"));
 const order_1 = __importDefault(require("../model/order"));
+const user_1 = __importDefault(require("../model/user"));
 const submitOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = req.body;
@@ -235,3 +236,131 @@ const updateOrderPriority = (req, res) => __awaiter(void 0, void 0, void 0, func
     }
 });
 exports.updateOrderPriority = updateOrderPriority;
+const updateOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const userId = req.userId;
+        const user = yield user_1.default.findById(userId);
+        if (!user || !["admin"].includes(user.role)) {
+            return res.status(403).json({
+                message: "Access denied. Only HR and admin can update targets.",
+            });
+        }
+        const updateData = req.body;
+        // Validate ObjectId format
+        if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid order ID format",
+            });
+        }
+        // Validate required fields for specific updates
+        if (updateData.status === "completed" && !updateData.remark) {
+            return res.status(400).json({
+                success: false,
+                message: "Remark is required when marking order as completed.",
+            });
+        }
+        if (updateData.amountReceived &&
+            updateData.amountReceived > updateData.totalAmount) {
+            return res.status(400).json({
+                success: false,
+                message: "Amount received cannot exceed total amount.",
+            });
+        }
+        // Check if order exists
+        const existingOrder = yield orderService.findOrderById(id);
+        if (!existingOrder) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found.",
+            });
+        }
+        // Prepare update data with proper type conversion
+        const processedUpdateData = Object.assign(Object.assign({}, updateData), { quantity: updateData.quantity ? parseInt(updateData.quantity) : undefined, totalAmount: updateData.totalAmount
+                ? parseFloat(updateData.totalAmount)
+                : undefined, amountReceived: updateData.amountReceived
+                ? parseFloat(updateData.amountReceived)
+                : undefined, deadline: updateData.deadline ? new Date(updateData.deadline) : undefined, priority: updateData.priority ? parseInt(updateData.priority) : undefined });
+        // Remove undefined values
+        Object.keys(processedUpdateData).forEach((key) => {
+            if (processedUpdateData[key] === undefined) {
+                delete processedUpdateData[key];
+            }
+        });
+        // Ensure at least one field to update
+        if (Object.keys(processedUpdateData).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid fields provided for update.",
+            });
+        }
+        const updatedOrder = yield orderService.updateOrder(id, processedUpdateData);
+        return res.status(200).json({ success: true, order: updatedOrder });
+    }
+    catch (error) {
+        console.error("Error updating order:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update order.",
+            error: error.message,
+        });
+    }
+});
+exports.updateOrder = updateOrder;
+const deleteOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const userId = req.userId;
+        const user = yield user_1.default.findById(userId);
+        if (!user || !["admin"].includes(user.role)) {
+            return res.status(403).json({
+                message: "Access denied. Only HR and admin can update targets.",
+            });
+        }
+        // Validate ObjectId format
+        if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid order ID format",
+            });
+        }
+        // Check if order exists and get order details
+        const existingOrder = yield orderService.findOrderById(id);
+        if (!existingOrder) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found.",
+            });
+        }
+        // Prevent deletion of completed orders
+        if (existingOrder.status === "completed") {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete completed orders.",
+            });
+        }
+        // Check if order has been dispatched
+        if (existingOrder.vehicleNumber || existingOrder.driverNumber) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete dispatched orders.",
+            });
+        }
+        const deletedOrder = yield orderService.deleteOrder(id);
+        return res.status(200).json({
+            success: true,
+            message: "Order deleted successfully",
+            order: deletedOrder,
+        });
+    }
+    catch (error) {
+        console.error("Error deleting order:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete order.",
+            error: error.message,
+        });
+    }
+});
+exports.deleteOrder = deleteOrder;

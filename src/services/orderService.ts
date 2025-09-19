@@ -18,7 +18,17 @@ export const updateOrder = async (
   id: Types.ObjectId | string,
   updates: Partial<IOrder>
 ): Promise<IOrder | null> => {
-  return Order.findByIdAndUpdate(id, updates, { new: true });
+  return Order.findByIdAndUpdate(id, updates, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  });
+};
+
+export const deleteOrder = async (
+  id: Types.ObjectId | string
+): Promise<IOrder | null> => {
+  return Order.findByIdAndDelete(id);
 };
 
 export const findOrderById = async (
@@ -119,10 +129,7 @@ export const getMyOrders = async (
     ];
   } else {
     // Default sorting: priority first (with nulls last), then by recency
-    sortStages = [
-      addPriorityField,
-      { $sort: {  createdAt: 1 } },
-    ];
+    sortStages = [addPriorityField, { $sort: { createdAt: 1 } }];
   }
 
   const skip = (page - 1) * limit;
@@ -133,7 +140,7 @@ export const getMyOrders = async (
       ...sortStages,
       { $skip: skip },
       { $limit: limit },
-      { $project: {  statusOrder: 0 } }, // Remove temporary fields
+      { $project: { statusOrder: 0 } }, // Remove temporary fields
     ]),
     Order.countDocuments(query),
   ]);
@@ -244,10 +251,7 @@ export const getAllOrders = async (
     ];
   } else {
     // Default sorting: priority first (with nulls last), then by recency
-    sortStages = [
-      addPriorityField,
-      { $sort: { createdAt: 1 } },
-    ];
+    sortStages = [addPriorityField, { $sort: { createdAt: 1 } }];
   }
 
   const skip = (page - 1) * limit;
@@ -258,7 +262,7 @@ export const getAllOrders = async (
       ...sortStages,
       { $skip: skip },
       { $limit: limit },
-      { $project: { statusOrder: 0 } }, 
+      { $project: { statusOrder: 0 } },
     ]),
     Order.countDocuments(query),
   ]);

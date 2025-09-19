@@ -2,12 +2,14 @@ import express from "express";
 // import { webhook } from "../controller/twillio";
 import { authenticateToken } from "../middleware/authMiddleware";
 import {
+  deleteOrder,
   deliverOrder,
   getAllOrders,
   getDispatchOrders,
   getMyOrders,
   markPending,
   submitOrder,
+  updateOrder,
   updateOrderPriority,
 } from "../controller/order";
 import { validateRequest } from "../middleware/validateRequest";
@@ -55,6 +57,8 @@ router.patch("/priority/:id", authenticateToken, updateOrderPriority);
 router.get("/dispatch", authenticateToken, getDispatchOrders);
 router.post("/deliver/:orderId", authenticateToken, deliverOrder);
 router.post("/pending/:orderId", authenticateToken, markPending);
+router.put("/:id", authenticateToken, updateOrder);
+router.delete("/:id", authenticateToken, deleteOrder);
 
 // WhatsApp webhook
 // router.post("/whatsapp/webhook", webhook);
