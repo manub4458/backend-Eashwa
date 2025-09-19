@@ -439,20 +439,43 @@ export const getOrderById = async (
       return;
     }
 
-    // Transform date for frontend
-    const orderData = {
-      ...order.toObject(),
-      deadline: order.deadline ? order.deadline.toISOString().slice(0, 16) : '',
+    // Transform data for frontend - handle both Mongoose document and plain object
+    let orderData: any = order;
+    
+    // If it's a Mongoose document (without lean), convert to plain object
+    if (typeof (order as any).toObject === 'function') {
+      orderData = (order as any).toObject();
+    }
+    // If it's already a plain object (from lean), use as-is
+    // orderData is already a plain object
+
+    // Transform date for frontend (datetime-local input format)
+    const transformedOrderData = {
+      ...orderData,
+      deadline: orderData.deadline ? new Date(orderData.deadline).toISOString().slice(0, 16) : '',
       // Convert numbers back to strings for form inputs
-      quantity: order.quantity?.toString() || '',
-      totalAmount: order.totalAmount?.toString() || '',
-      amountReceived: order.amountReceived?.toString() || '',
-      priority: order.priority?.toString() || '',
+      quantity: orderData.quantity?.toString() || '',
+      totalAmount: orderData.totalAmount?.toString() || '',
+      amountReceived: orderData.amountReceived?.toString() || '',
+      priority: orderData.priority !== null && orderData.priority !== undefined 
+        ? orderData.priority.toString() 
+        : '',
+      // Ensure piPdf is always a string
+      piPdf: orderData.piPdf || '',
+      // Include additional fields that might be useful
+      status: orderData.status || '',
+      remark: orderData.remark || '',
+      pendingReason: orderData.pendingReason || '',
+      // Virtual field for pendency
+      pendency: orderData.deadline && new Date(orderData.deadline) < new Date() && orderData.status !== 'completed',
     };
+
+    // Remove _id if you don't want to send it, or keep it for reference
+    // delete transformedOrderData._id;
 
     res.status(200).json({
       success: true,
-      order: orderData,
+      order: transformedOrderData,
     });
   } catch (error: any) {
     console.error('Error fetching order:', error);
