@@ -35,7 +35,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteOrder = exports.updateOrder = exports.updateOrderPriority = exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.markPending = exports.deliverOrder = exports.submitOrder = void 0;
+exports.getOrderById = exports.deleteOrder = exports.updateOrder = exports.updateOrderPriority = exports.getDispatchOrders = exports.getAllOrders = exports.getMyOrders = exports.markPending = exports.deliverOrder = exports.submitOrder = void 0;
 const orderService = __importStar(require("../services/orderService"));
 const notificationService = __importStar(require("../services/notificationService"));
 const order_1 = __importDefault(require("../model/order"));
@@ -364,3 +364,44 @@ const deleteOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     }
 });
 exports.deleteOrder = deleteOrder;
+// GET Order by ID
+const getOrderById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
+    try {
+        const { id } = req.params;
+        // Validate ObjectId format
+        if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid order ID format',
+            });
+            return;
+        }
+        // Fetch order with populated user data
+        const order = yield orderService.findOrderById(id);
+        if (!order) {
+            res.status(404).json({
+                success: false,
+                message: 'Order not found.',
+            });
+            return;
+        }
+        // Transform date for frontend
+        const orderData = Object.assign(Object.assign({}, order.toObject()), { deadline: order.deadline ? order.deadline.toISOString().slice(0, 16) : '', 
+            // Convert numbers back to strings for form inputs
+            quantity: ((_a = order.quantity) === null || _a === void 0 ? void 0 : _a.toString()) || '', totalAmount: ((_b = order.totalAmount) === null || _b === void 0 ? void 0 : _b.toString()) || '', amountReceived: ((_c = order.amountReceived) === null || _c === void 0 ? void 0 : _c.toString()) || '', priority: ((_d = order.priority) === null || _d === void 0 ? void 0 : _d.toString()) || '' });
+        res.status(200).json({
+            success: true,
+            order: orderData,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching order:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to fetch order.',
+            error: error.message,
+        });
+    }
+});
+exports.getOrderById = getOrderById;

@@ -7,6 +7,7 @@ import {
   getAllOrders,
   getDispatchOrders,
   getMyOrders,
+  getOrderById,
   markPending,
   submitOrder,
   updateOrder,
@@ -59,6 +60,7 @@ router.post("/deliver/:orderId", authenticateToken, deliverOrder);
 router.post("/pending/:orderId", authenticateToken, markPending);
 router.put("/:id", authenticateToken, updateOrder);
 router.delete("/:id", authenticateToken, deleteOrder);
+router.get("/:id", authenticateToken, getOrderById);
 
 // WhatsApp webhook
 // router.post("/whatsapp/webhook", webhook);

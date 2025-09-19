@@ -38,6 +38,7 @@ router.post("/deliver/:orderId", authMiddleware_1.authenticateToken, order_1.del
 router.post("/pending/:orderId", authMiddleware_1.authenticateToken, order_1.markPending);
 router.put("/:id", authMiddleware_1.authenticateToken, order_1.updateOrder);
 router.delete("/:id", authMiddleware_1.authenticateToken, order_1.deleteOrder);
+router.get("/:id", authMiddleware_1.authenticateToken, order_1.getOrderById);
 // WhatsApp webhook
 // router.post("/whatsapp/webhook", webhook);
 exports.default = router;

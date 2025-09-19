@@ -33,8 +33,8 @@ export const deleteOrder = async (
 
 export const findOrderById = async (
   id: Types.ObjectId | string
-): Promise<IOrder | null> => {
-  return Order.findById(id);
+) => {
+  return Order.findById(id).populate("submittedBy", "name email").lean(); // Use lean() for better performance since we're just reading
 };
 
 export const findOrderBySid = async (sid: string): Promise<IOrder | null> => {

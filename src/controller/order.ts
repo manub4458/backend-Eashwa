@@ -410,3 +410,56 @@ export const deleteOrder = async (req: Request, res: Response) => {
     });
   }
 };
+
+// GET Order by ID
+export const getOrderById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    // Validate ObjectId format
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+      return;
+    }
+
+    // Fetch order with populated user data
+    const order = await orderService.findOrderById(id);
+    
+    if (!order) {
+      res.status(404).json({
+        success: false,
+        message: 'Order not found.',
+      });
+      return;
+    }
+
+    // Transform date for frontend
+    const orderData = {
+      ...order.toObject(),
+      deadline: order.deadline ? order.deadline.toISOString().slice(0, 16) : '',
+      // Convert numbers back to strings for form inputs
+      quantity: order.quantity?.toString() || '',
+      totalAmount: order.totalAmount?.toString() || '',
+      amountReceived: order.amountReceived?.toString() || '',
+      priority: order.priority?.toString() || '',
+    };
+
+    res.status(200).json({
+      success: true,
+      order: orderData,
+    });
+  } catch (error: any) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch order.',
+      error: error.message,
+    });
+  }
+};

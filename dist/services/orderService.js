@@ -61,7 +61,7 @@ const deleteOrder = (id) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.deleteOrder = deleteOrder;
 const findOrderById = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    return order_1.default.findById(id);
+    return order_1.default.findById(id).populate("submittedBy", "name email").lean(); // Use lean() for better performance since we're just reading
 });
 exports.findOrderById = findOrderById;
 const findOrderBySid = (sid) => __awaiter(void 0, void 0, void 0, function* () {
