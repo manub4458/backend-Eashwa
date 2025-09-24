@@ -31,9 +31,7 @@ export const deleteOrder = async (
   return Order.findByIdAndDelete(id);
 };
 
-export const findOrderById = async (
-  id: Types.ObjectId | string
-) => {
+export const findOrderById = async (id: Types.ObjectId | string) => {
   return Order.findById(id).populate("submittedBy", "name email").lean(); // Use lean() for better performance since we're just reading
 };
 
@@ -189,6 +187,11 @@ export const getAllOrders = async (
 
   if (orderId) {
     query.orderId = { $regex: orderId, $options: "i" };
+  }
+
+  // Exclude completed orders unless sortBy is "delivered_first"
+  if (sortBy !== "delivered_first") {
+    query.status = { $ne: "completed" };
   }
 
   // Add a field to handle priority sorting with null values at the end

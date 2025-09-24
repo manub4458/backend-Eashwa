@@ -153,6 +153,7 @@ export interface IOrder extends Document {
     | "payment_not_received"
     | "ready_for_dispatch"
     | "pending"
+    | "cancelled"
     | "completed";
   orderId?: string;
   driverNumber?: string;
@@ -162,6 +163,7 @@ export interface IOrder extends Document {
   priority: number;
   transporterName?: string;
   pendingReason?: string;
+  cancelReason?: string;
   remark?: String;
   remarkQuerySid?: String;
   remarkInputSid?: String;

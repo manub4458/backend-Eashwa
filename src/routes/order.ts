@@ -8,6 +8,7 @@ import {
   getDispatchOrders,
   getMyOrders,
   getOrderById,
+  markCancel,
   markPending,
   submitOrder,
   updateOrder,
@@ -58,6 +59,7 @@ router.patch("/priority/:id", authenticateToken, updateOrderPriority);
 router.get("/dispatch", authenticateToken, getDispatchOrders);
 router.post("/deliver/:orderId", authenticateToken, deliverOrder);
 router.post("/pending/:orderId", authenticateToken, markPending);
+router.post("/cancel/:orderId", authenticateToken, markCancel);
 router.put("/:id", authenticateToken, updateOrder);
 router.delete("/:id", authenticateToken, deleteOrder);
 router.get("/:id", authenticateToken, getOrderById);

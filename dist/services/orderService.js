@@ -187,6 +187,10 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
     if (orderId) {
         query.orderId = { $regex: orderId, $options: "i" };
     }
+    // Exclude completed orders unless sortBy is "delivered_first"
+    if (sortBy !== "delivered_first") {
+        query.status = { $ne: "completed" };
+    }
     // Add a field to handle priority sorting with null values at the end
     const addPriorityField = {
         $addFields: {

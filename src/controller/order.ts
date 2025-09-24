@@ -118,6 +118,41 @@ export const markPending = async (
   }
 };
 
+export const markCancel = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { cancelReason } = req.body;
+    if (
+      !cancelReason ||
+      typeof cancelReason !== "string" ||
+      !cancelReason.trim()
+    ) {
+      res
+        .status(400)
+        .json({ success: false, message: "Cancel reason is required." });
+      return;
+    }
+    const order = await orderService.findOrderById(req.params.orderId);
+    if (!order || order.status !== "ready_for_dispatch") {
+      res
+        .status(400)
+        .json({ success: false, message: "Invalid order status." });
+      return;
+    }
+    await orderService.updateOrder(req.params.orderId, {
+      status: "cancelled",
+      cancelReason,
+    });
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to Cancel Order.", error });
+  }
+};
+
 export const getMyOrders = async (
   req: Request,
   res: Response
@@ -423,27 +458,27 @@ export const getOrderById = async (
     if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
       res.status(400).json({
         success: false,
-        message: 'Invalid order ID format',
+        message: "Invalid order ID format",
       });
       return;
     }
 
     // Fetch order with populated user data
     const order = await orderService.findOrderById(id);
-    
+
     if (!order) {
       res.status(404).json({
         success: false,
-        message: 'Order not found.',
+        message: "Order not found.",
       });
       return;
     }
 
     // Transform data for frontend - handle both Mongoose document and plain object
     let orderData: any = order;
-    
+
     // If it's a Mongoose document (without lean), convert to plain object
-    if (typeof (order as any).toObject === 'function') {
+    if (typeof (order as any).toObject === "function") {
       orderData = (order as any).toObject();
     }
     // If it's already a plain object (from lean), use as-is
@@ -452,22 +487,28 @@ export const getOrderById = async (
     // Transform date for frontend (datetime-local input format)
     const transformedOrderData = {
       ...orderData,
-      deadline: orderData.deadline ? new Date(orderData.deadline).toISOString().slice(0, 16) : '',
+      deadline: orderData.deadline
+        ? new Date(orderData.deadline).toISOString().slice(0, 16)
+        : "",
       // Convert numbers back to strings for form inputs
-      quantity: orderData.quantity?.toString() || '',
-      totalAmount: orderData.totalAmount?.toString() || '',
-      amountReceived: orderData.amountReceived?.toString() || '',
-      priority: orderData.priority !== null && orderData.priority !== undefined 
-        ? orderData.priority.toString() 
-        : '',
+      quantity: orderData.quantity?.toString() || "",
+      totalAmount: orderData.totalAmount?.toString() || "",
+      amountReceived: orderData.amountReceived?.toString() || "",
+      priority:
+        orderData.priority !== null && orderData.priority !== undefined
+          ? orderData.priority.toString()
+          : "",
       // Ensure piPdf is always a string
-      piPdf: orderData.piPdf || '',
+      piPdf: orderData.piPdf || "",
       // Include additional fields that might be useful
-      status: orderData.status || '',
-      remark: orderData.remark || '',
-      pendingReason: orderData.pendingReason || '',
+      status: orderData.status || "",
+      remark: orderData.remark || "",
+      pendingReason: orderData.pendingReason || "",
       // Virtual field for pendency
-      pendency: orderData.deadline && new Date(orderData.deadline) < new Date() && orderData.status !== 'completed',
+      pendency:
+        orderData.deadline &&
+        new Date(orderData.deadline) < new Date() &&
+        orderData.status !== "completed",
     };
 
     // Remove _id if you don't want to send it, or keep it for reference
@@ -478,10 +519,10 @@ export const getOrderById = async (
       order: transformedOrderData,
     });
   } catch (error: any) {
-    console.error('Error fetching order:', error);
+    console.error("Error fetching order:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch order.',
+      message: "Failed to fetch order.",
       error: error.message,
     });
   }

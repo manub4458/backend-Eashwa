@@ -36,6 +36,7 @@ router.patch("/priority/:id", authMiddleware_1.authenticateToken, order_1.update
 router.get("/dispatch", authMiddleware_1.authenticateToken, order_1.getDispatchOrders);
 router.post("/deliver/:orderId", authMiddleware_1.authenticateToken, order_1.deliverOrder);
 router.post("/pending/:orderId", authMiddleware_1.authenticateToken, order_1.markPending);
+router.post("/cancel/:orderId", authMiddleware_1.authenticateToken, order_1.markCancel);
 router.put("/:id", authMiddleware_1.authenticateToken, order_1.updateOrder);
 router.delete("/:id", authMiddleware_1.authenticateToken, order_1.deleteOrder);
 router.get("/:id", authMiddleware_1.authenticateToken, order_1.getOrderById);
