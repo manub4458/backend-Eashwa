@@ -56,8 +56,8 @@ const authenticateToken = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                 }
                 else {
                     //generate new auth token and refersh token
-                    const newAuthToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_SECRET_KEY || "", { expiresIn: "10d" });
-                    const newRefreshToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_REFRESH_SECRET_KEY || "", { expiresIn: "30d" });
+                    const newAuthToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_SECRET_KEY || "", { expiresIn: "30d" });
+                    const newRefreshToken = jsonwebtoken_1.default.sign({ userId: refreshDecode.userId }, process.env.JWT_REFRESH_SECRET_KEY || "", { expiresIn: "60d" });
                     //save auth token and referesh token in cookies
                     res.cookie("authToken", newAuthToken, { httpOnly: true });
                     res.cookie("refreshToken", newRefreshToken, { httpOnly: true });

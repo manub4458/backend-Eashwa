@@ -58,12 +58,12 @@ export const authenticateToken = async (
               const newAuthToken = jwt.sign(
                 { userId: refreshDecode.userId },
                 process.env.JWT_SECRET_KEY || "",
-                { expiresIn: "10d" }
+                { expiresIn: "30d" }
               );
               const newRefreshToken = jwt.sign(
                 { userId: refreshDecode.userId },
                 process.env.JWT_REFRESH_SECRET_KEY || "",
-                { expiresIn: "30d" }
+                { expiresIn: "60d" }
               );
               //save auth token and referesh token in cookies
               res.cookie("authToken", newAuthToken, { httpOnly: true });

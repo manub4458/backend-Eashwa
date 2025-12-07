@@ -172,13 +172,13 @@ export const login = async (req: Request, res: Response) => {
     const authToken = jwt.sign(
       { userId: user.id },
       process.env.JWT_SECRET_KEY || " ",
-      { expiresIn: "30m" }
+      { expiresIn: "30d" }
     );
 
     const refreshToken = jwt.sign(
       { userId: user.id },
       process.env.JWT_REFRESH_SECRET_KEY || " ",
-      { expiresIn: "2h" }
+      { expiresIn: "60d" }
     );
 
     res.cookie("authToken", authToken, { httpOnly: true });

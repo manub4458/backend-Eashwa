@@ -146,8 +146,8 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Invalid credentials",
             });
         }
-        const authToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: "30m" });
-        const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: "2h" });
+        const authToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET_KEY || " ", { expiresIn: "30d" });
+        const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_REFRESH_SECRET_KEY || " ", { expiresIn: "60d" });
         res.cookie("authToken", authToken, { httpOnly: true });
         res.cookie("refreshToken", refreshToken, { httpOnly: true });
         res.header("Authorization", `Bearer ${authToken}`);
