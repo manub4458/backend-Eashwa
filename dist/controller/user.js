@@ -49,26 +49,27 @@ const visitor_1 = __importDefault(require("../model/visitor"));
 const otplib_1 = require("otplib");
 const emailer_1 = require("../utils/emailer");
 const healper_1 = require("../utils/healper");
+const mongoose_2 = __importDefault(require("mongoose"));
 const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const session = yield mongoose_2.default.startSession();
+    session.startTransaction();
     try {
-        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, targetAchieved, profilePicture, post, } = req.body;
-        const expression = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-        const pass = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
+        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, post, managedBy, // This will be the manager's ID (sent from frontend)
+         } = req.body;
+        // Validation
+        const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
+        }
         if (!role) {
-            return res.status(407).json({ message: "role is required" });
+            return res.status(400).json({ message: "Role is required" });
         }
-        // if (!pass.test(password.toString())) {
-        //   return res.status(407).json({
-        //     message: "Enter valid password with uppercase, lowercase, number & @",
-        //   });
-        // }
-        if (!expression.test(email.toString())) {
-            return res.status(407).json({ message: "Enter valid email" });
+        // Check if user already exists
+        const existingUser = yield user_1.default.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "User with this email already exists" });
         }
-        const existinguser = yield user_1.default.findOne({ email });
-        if (existinguser) {
-            return res.status(400).json({ ok: false, message: "User already Exist" });
-        }
+        // Create new user
         const newUser = new user_1.default({
             name,
             email,
@@ -79,15 +80,47 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             employeeId,
             phone,
             joiningDate,
-            targetAchieved,
-            profilePicture,
             post,
+            managedBy: managedBy || null, // Set manager if provided
         });
-        yield newUser.save();
-        res.status(200).json({ message: "registered successfully" });
+        // If there's a manager, update their `manages` array
+        if (managedBy) {
+            const manager = yield user_1.default.findById(managedBy).session(session);
+            if (!manager) {
+                yield session.abortTransaction();
+                return res.status(404).json({ message: "Manager not found" });
+            }
+            // Optional: restrict who can be a manager
+            if (!["manager", "admin", "hr", "admin-plant"].includes(manager.role)) {
+                yield session.abortTransaction();
+                return res.status(400).json({ message: "Assigned manager does not have permission to manage employees" });
+            }
+            // Avoid duplicate entry
+            if (!manager.manages.includes(newUser._id)) {
+                manager.manages.push(newUser._id);
+                yield manager.save({ session });
+            }
+        }
+        yield newUser.save({ session });
+        yield session.commitTransaction();
+        res.status(201).json({
+            message: "User registered successfully",
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role,
+                managedBy: newUser.managedBy,
+            },
+        });
     }
     catch (err) {
-        res.status(407).json({ message: err });
+        yield session.abortTransaction();
+        console.error("Registration error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+    finally {
+        session.endSession();
     }
 });
 exports.register = register;

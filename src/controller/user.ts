@@ -18,6 +18,7 @@ import {
   headerMapping,
   validateLeadData,
 } from "../utils/healper";
+import mongoose from "mongoose";
 
 interface LeadType {
   leadDate: Date;
@@ -47,6 +48,9 @@ export const register = async (
   res: Response,
   next: NextFunction
 ) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const {
       name,
@@ -58,29 +62,27 @@ export const register = async (
       employeeId,
       phone,
       joiningDate,
-      targetAchieved,
-      profilePicture,
       post,
+      managedBy, // This will be the manager's ID (sent from frontend)
     } = req.body;
-    const expression: RegExp = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-    const pass: RegExp =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
+
+    // Validation
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
 
     if (!role) {
-      return res.status(407).json({ message: "role is required" });
+      return res.status(400).json({ message: "Role is required" });
     }
-    // if (!pass.test(password.toString())) {
-    //   return res.status(407).json({
-    //     message: "Enter valid password with uppercase, lowercase, number & @",
-    //   });
-    // }
-    if (!expression.test(email.toString())) {
-      return res.status(407).json({ message: "Enter valid email" });
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
     }
-    const existinguser = await User.findOne({ email });
-    if (existinguser) {
-      return res.status(400).json({ ok: false, message: "User already Exist" });
-    }
+
+    // Create new user
     const newUser = new User({
       name,
       email,
@@ -91,14 +93,52 @@ export const register = async (
       employeeId,
       phone,
       joiningDate,
-      targetAchieved,
-      profilePicture,
       post,
+      managedBy: managedBy || null, // Set manager if provided
     });
-    await newUser.save();
-    res.status(200).json({ message: "registered successfully" });
-  } catch (err) {
-    res.status(407).json({ message: err });
+
+    // If there's a manager, update their `manages` array
+    if (managedBy) {
+      const manager = await User.findById(managedBy).session(session);
+
+      if (!manager) {
+        await session.abortTransaction();
+        return res.status(404).json({ message: "Manager not found" });
+      }
+
+      // Optional: restrict who can be a manager
+      if (!["manager", "admin", "hr", "admin-plant"].includes(manager.role)) {
+        await session.abortTransaction();
+        return res.status(400).json({ message: "Assigned manager does not have permission to manage employees" });
+      }
+
+      // Avoid duplicate entry
+      if (!manager.manages.includes(newUser._id as Types.ObjectId)) {
+        manager.manages.push(newUser._id as Types.ObjectId);
+        await manager.save({ session });
+      }
+    }
+
+    await newUser.save({ session });
+
+    await session.commitTransaction();
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        managedBy: newUser.managedBy,
+      },
+    });
+  } catch (err: any) {
+    await session.abortTransaction();
+    console.error("Registration error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  } finally {
+    session.endSession();
   }
 };
 
