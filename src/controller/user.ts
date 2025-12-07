@@ -63,6 +63,8 @@ export const register = async (
       phone,
       joiningDate,
       post,
+       targetAchieved,
+      profilePicture,
       managedBy, // This will be the manager's ID (sent from frontend)
     } = req.body;
 
@@ -94,6 +96,8 @@ export const register = async (
       phone,
       joiningDate,
       post,
+       targetAchieved,
+      profilePicture,
       managedBy: managedBy || null, // Set manager if provided
     });
 

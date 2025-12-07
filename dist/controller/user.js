@@ -54,7 +54,7 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
     const session = yield mongoose_2.default.startSession();
     session.startTransaction();
     try {
-        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, post, managedBy, // This will be the manager's ID (sent from frontend)
+        const { name, email, password, address, aadhaarNumber, role, employeeId, phone, joiningDate, post, targetAchieved, profilePicture, managedBy, // This will be the manager's ID (sent from frontend)
          } = req.body;
         // Validation
         const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
@@ -81,6 +81,8 @@ const register = (req, res, next) => __awaiter(void 0, void 0, void 0, function*
             phone,
             joiningDate,
             post,
+            targetAchieved,
+            profilePicture,
             managedBy: managedBy || null, // Set manager if provided
         });
         // If there's a manager, update their `manages` array
