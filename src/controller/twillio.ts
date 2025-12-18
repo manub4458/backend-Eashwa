@@ -29,7 +29,7 @@ export const submitRequest = async (
   try {
     const formResposne = await client.messages.create({
       from: "whatsapp:+919911130173",
-      to: `whatsapp:+918630718577`,
+      to: `whatsapp:+917723866666`,
       contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
       contentVariables: JSON.stringify({
         "1": name,
@@ -41,7 +41,7 @@ export const submitRequest = async (
     });
     const secondResponse = await client.messages.create({
       from: "whatsapp:+919911130173",
-      to: `whatsapp:+918077335703`,
+      to: `whatsapp:+919990148011`,
       contentSid: "HX0d74e16f4926ca40451faa795b3267ea",
       contentVariables: JSON.stringify({
         "1": name,
