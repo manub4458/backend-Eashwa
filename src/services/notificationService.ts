@@ -10,6 +10,9 @@ const client = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 const TWILIO_WHATSAPP_FROM = "whatsapp:+919911130173";
+// const ACCOUNTS_WHATSAPP = "whatsapp:+919917108992";
+// const DISPATCH_WHATSAPP = "whatsapp:+919927402044";
+// const DEEPAK_WHATSAPP = "whatsapp:+919045099190";
 const ACCOUNTS_WHATSAPP = "whatsapp:+918077335703";
 const DISPATCH_WHATSAPP = "whatsapp:+918979456475";
 const DEEPAK_WHATSAPP = "whatsapp:+918077335703";
@@ -89,11 +92,14 @@ export const sendDeepakConfirmation = async (order: IOrder): Promise<void> => {
   const message = await client.messages.create({
     from: TWILIO_WHATSAPP_FROM,
     to: DEEPAK_WHATSAPP,
-    contentSid: "HX376339237760e253cb95476662771da2",
+    contentSid: "HXb2c251788f5594e5be0aa1a3cd01021f",
     contentVariables: JSON.stringify({
       "1": order.orderId,
       "2": order.driverNumber,
       "3": order.vehicleNumber,
+      "4": order.partyName,
+      "5": order.location,
+      "6": order.transporterName
     }),
   });
 };
