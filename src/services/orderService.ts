@@ -53,15 +53,15 @@ export const getMyOrders = async (
 }> => {
   const query: any = { submittedBy: new Types.ObjectId(userId) }; // Explicitly convert to ObjectId for safety
 
-  if (month) {
-    const [year, monthNum] = month.split("-");
-    const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
-    query.createdAt = {
-      $gte: startDate,
-      $lte: endDate,
-    };
-  }
+if (month) {
+  const [year, monthNum] = month.split("-");
+  const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+  const endDate = new Date(parseInt(year), parseInt(monthNum), 0);   // ← this is the problem line
+  query.createdAt = {
+    $gte: startDate,
+    $lte: endDate,
+  };
+}
 
   if (orderId) {
     query.orderId = { $regex: orderId, $options: "i" };
@@ -175,15 +175,16 @@ export const getAllOrders = async (
 }> => {
   const query: any = {};
 
-  if (month) {
-    const [year, monthNum] = month.split("-");
-    const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-    const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
-    query.createdAt = {
-      $gte: startDate,
-      $lte: endDate,
-    };
-  }
+if (month) {
+  const [yearStr, monthStr] = month.split("-");
+  const y = parseInt(yearStr);
+  const m = parseInt(monthStr) - 1;
+
+  const startDate = new Date(Date.UTC(y, m, 1));
+  const endDate   = new Date(Date.UTC(y, m + 1, 1));
+
+  query.createdAt = { $gte: startDate, $lt: endDate };
+}
 
   if (orderId) {
     query.orderId = { $regex: orderId, $options: "i" };

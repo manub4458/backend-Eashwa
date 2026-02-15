@@ -73,7 +73,7 @@ const getMyOrders = (userId_1, ...args_1) => __awaiter(void 0, [userId_1, ...arg
     if (month) {
         const [year, monthNum] = month.split("-");
         const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-        const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
+        const endDate = new Date(parseInt(year), parseInt(monthNum), 0); // ← this is the problem line
         query.createdAt = {
             $gte: startDate,
             $lte: endDate,
@@ -176,13 +176,12 @@ exports.getMyOrders = getMyOrders;
 const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (page = 1, limit = 10, month, orderId, sortBy) {
     const query = {};
     if (month) {
-        const [year, monthNum] = month.split("-");
-        const startDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-        const endDate = new Date(parseInt(year), parseInt(monthNum), 0);
-        query.createdAt = {
-            $gte: startDate,
-            $lte: endDate,
-        };
+        const [yearStr, monthStr] = month.split("-");
+        const y = parseInt(yearStr);
+        const m = parseInt(monthStr) - 1;
+        const startDate = new Date(Date.UTC(y, m, 1));
+        const endDate = new Date(Date.UTC(y, m + 1, 1));
+        query.createdAt = { $gte: startDate, $lt: endDate };
     }
     if (orderId) {
         query.orderId = { $regex: orderId, $options: "i" };
