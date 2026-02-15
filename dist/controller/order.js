@@ -203,7 +203,8 @@ const getAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const month = req.query.month;
         const orderId = req.query.orderId;
         const sortBy = req.query.sortBy;
-        const result = yield orderService.getAllOrders(page, limit, month, orderId, sortBy);
+        const username = req.query.username;
+        const result = yield orderService.getAllOrders(page, limit, month, orderId, sortBy, username);
         res.status(200).json({
             success: true,
             orders: result.orders,

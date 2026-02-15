@@ -208,13 +208,15 @@ export const getAllOrders = async (
     const month = req.query.month as string;
     const orderId = req.query.orderId as string;
     const sortBy = req.query.sortBy as string;
+    const username = req.query.username as string;
 
     const result = await orderService.getAllOrders(
       page,
       limit,
       month,
       orderId,
-      sortBy
+      sortBy,
+      username
     );
 
     res.status(200).json({

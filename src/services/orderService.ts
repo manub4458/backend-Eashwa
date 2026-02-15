@@ -167,7 +167,8 @@ export const getAllOrders = async (
   limit: number = 10,
   month?: string,
   orderId?: string,
-  sortBy?: string
+  sortBy?: string,
+  username?:string
 ): Promise<{
   orders: IOrder[];
   totalPages: number;
@@ -191,8 +192,16 @@ if (month) {
   }
 
   // Exclude completed orders unless sortBy is "delivered_first"
-  if (sortBy !== "delivered_first") {
-    query.status = { $ne: "completed" };
+  // ────── STATUS FILTERING ──────
+  const excludedForAll = sortBy !== "delivered_first" ? ["completed"] : [];
+  const extraExcludedForDispatch = username === "EASWS0A30"
+    ? ["pending_verification", "payment_not_received"]
+    : [];
+
+  const allExcluded = [...excludedForAll, ...extraExcludedForDispatch];
+
+  if (allExcluded.length > 0) {
+    query.status = { $nin: allExcluded };
   }
 
   // Add a field to handle priority sorting with null values at the end

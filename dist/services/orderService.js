@@ -173,7 +173,7 @@ exports.getMyOrders = getMyOrders;
  * @param sortBy Sort by pending_first, delivered_first, or latest
  * @returns Object containing orders, total pages, and total orders
  */
-const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (page = 1, limit = 10, month, orderId, sortBy) {
+const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (page = 1, limit = 10, month, orderId, sortBy, username) {
     const query = {};
     if (month) {
         const [yearStr, monthStr] = month.split("-");
@@ -187,8 +187,14 @@ const getAllOrders = (...args_1) => __awaiter(void 0, [...args_1], void 0, funct
         query.orderId = { $regex: orderId, $options: "i" };
     }
     // Exclude completed orders unless sortBy is "delivered_first"
-    if (sortBy !== "delivered_first") {
-        query.status = { $ne: "completed" };
+    // ────── STATUS FILTERING ──────
+    const excludedForAll = sortBy !== "delivered_first" ? ["completed"] : [];
+    const extraExcludedForDispatch = username === "EASWS0A30"
+        ? ["pending_verification", "payment_not_received"]
+        : [];
+    const allExcluded = [...excludedForAll, ...extraExcludedForDispatch];
+    if (allExcluded.length > 0) {
+        query.status = { $nin: allExcluded };
     }
     // Add a field to handle priority sorting with null values at the end
     const addPriorityField = {
