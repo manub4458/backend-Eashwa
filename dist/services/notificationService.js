@@ -21,7 +21,7 @@ const client = (0, twilio_1.default)(process.env.TWILIO_ACCOUNT_SID, process.env
 const TWILIO_WHATSAPP_FROM = "whatsapp:+919911130173";
 const ACCOUNTS_WHATSAPP = "whatsapp:+919917108992";
 const DISPATCH_WHATSAPP = "whatsapp:+919354028632";
-const DEEPAK_WHATSAPP = "whatsapp:+919045099190";
+const DEEPAK_WHATSAPP = "whatsapp:+917011496497";
 const sendAccountsVerificationNotification = (order) => __awaiter(void 0, void 0, void 0, function* () {
     const message = yield client.messages.create({
         from: TWILIO_WHATSAPP_FROM,
