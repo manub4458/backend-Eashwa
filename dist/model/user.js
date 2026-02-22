@@ -109,6 +109,12 @@ const userSchema = new mongoose_1.Schema({
             ref: "Visitor",
         },
     ],
+    dailyLeads: [
+        {
+            type: mongoose_1.Types.ObjectId,
+            ref: "DailyLead",
+        },
+    ],
     leads: [
         {
             type: mongoose_1.Types.ObjectId,

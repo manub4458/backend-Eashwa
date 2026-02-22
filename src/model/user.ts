@@ -97,6 +97,12 @@ const userSchema = new Schema<IUser>({
       ref: "Visitor",
     },
   ],
+  dailyLeads: [
+    {
+      type: Types.ObjectId,
+      ref: "DailyLead",
+    },
+  ],
   leads: [
     {
       type: Types.ObjectId,

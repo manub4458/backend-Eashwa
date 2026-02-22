@@ -66,6 +66,7 @@ export interface IUser extends Document {
   targetAchieved?: ITargetAchieved;
   profilePicture?: string;
   visitors?: Types.ObjectId[];
+  dailyLeads?: Types.ObjectId[];
   leads?: Types.ObjectId[];
   targetLeads: {
     type: typeof Types.ObjectId;
@@ -78,6 +79,16 @@ export interface IUser extends Document {
     current: number;
     history: RatingHistory[];
   };
+}
+
+export interface IDailyLead extends Document {
+  user: Types.ObjectId;
+  date: Date;
+  numberOfLeads: number;
+  interestedLeads: number;
+  notInterestedFake: number;
+  nextMonthConnect: number;
+  totalDealer: number;
 }
 
 export interface mUser extends Document {

@@ -24,6 +24,7 @@ const twillio_1 = __importDefault(require("./routes/twillio"));
 const image_1 = __importDefault(require("./routes/image"));
 const order_1 = __importDefault(require("./routes/order"));
 const ticket_1 = __importDefault(require("./routes/ticket"));
+const dailyLeads_1 = __importDefault(require("./routes/dailyLeads"));
 const morgan_1 = __importDefault(require("morgan"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -48,6 +49,7 @@ app.use("/api/request", twillio_1.default);
 app.use("/api/images", image_1.default);
 app.use("/api/orders", order_1.default);
 app.use("/api/tickets", ticket_1.default);
+app.use("/api/daily-leads", dailyLeads_1.default);
 app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message });
 });

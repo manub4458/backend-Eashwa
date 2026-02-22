@@ -10,6 +10,7 @@ import requestRouter from "./routes/twillio";
 import imageRouter from "./routes/image";
 import orderRoutes from "./routes/order";
 import ticketRoutes from "./routes/ticket";
+import dailyLeadRoutes from "./routes/dailyLeads";
 import morgan from "morgan";
 declare global {
   namespace Express {
@@ -45,6 +46,7 @@ app.use("/api/request", requestRouter);
 app.use("/api/images", imageRouter);
 app.use("/api/orders", orderRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/daily-leads", dailyLeadRoutes)
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: err.message });
 });
