@@ -70,3 +70,14 @@ export const deleteDailyLead = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Error deleting entry", error: error.message });
   }
 };
+
+export const getDailyLeadById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const dailyLead = await dailyLeadService.getById(id);
+    if (!dailyLead) return res.status(404).json({ message: "Not found" });
+    res.status(200).json(dailyLead);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching", error });
+  }
+};

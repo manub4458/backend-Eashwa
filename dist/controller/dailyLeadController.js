@@ -32,7 +32,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDailyLead = exports.updateDailyLead = exports.getDailyLeadsByUser = exports.getAllDailyLeads = exports.createDailyLead = void 0;
+exports.getDailyLeadById = exports.deleteDailyLead = exports.updateDailyLead = exports.getDailyLeadsByUser = exports.getAllDailyLeads = exports.createDailyLead = void 0;
 const dailyLeadService = __importStar(require("../services/dailyLeadService"));
 const createDailyLead = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -107,3 +107,16 @@ const deleteDailyLead = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.deleteDailyLead = deleteDailyLead;
+const getDailyLeadById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const dailyLead = yield dailyLeadService.getById(id);
+        if (!dailyLead)
+            return res.status(404).json({ message: "Not found" });
+        res.status(200).json(dailyLead);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error fetching", error });
+    }
+});
+exports.getDailyLeadById = getDailyLeadById;

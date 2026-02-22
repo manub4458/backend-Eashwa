@@ -120,3 +120,7 @@ export const deleteDailyLead = async (id: string): Promise<IDailyLead | null> =>
   if (!Types.ObjectId.isValid(id)) return null;
   return await DailyLead.findByIdAndDelete(id);
 };
+
+export const getById = async (id: string) => {
+  return await DailyLead.findById(id).populate("user", "name email");
+};

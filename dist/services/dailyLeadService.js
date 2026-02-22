@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteDailyLead = exports.updateDailyLead = exports.getDailyLeadsByUser = exports.getAllDailyLeads = exports.createDailyLead = void 0;
+exports.getById = exports.deleteDailyLead = exports.updateDailyLead = exports.getDailyLeadsByUser = exports.getAllDailyLeads = exports.createDailyLead = void 0;
 // services/dailyLeadService.ts
 const dailyLead_1 = __importDefault(require("../model/dailyLead")); // adjust import path
 const mongoose_1 = require("mongoose");
@@ -114,3 +114,7 @@ const deleteDailyLead = (id) => __awaiter(void 0, void 0, void 0, function* () {
     return yield dailyLead_1.default.findByIdAndDelete(id);
 });
 exports.deleteDailyLead = deleteDailyLead;
+const getById = (id) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield dailyLead_1.default.findById(id).populate("user", "name email");
+});
+exports.getById = getById;

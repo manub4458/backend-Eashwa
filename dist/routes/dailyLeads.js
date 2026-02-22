@@ -10,6 +10,7 @@ const router = express_1.default.Router();
 router.post("/", authMiddleware_1.authenticateToken, dailyLeadController_1.createDailyLead);
 router.get("/", authMiddleware_1.authenticateToken, dailyLeadController_1.getAllDailyLeads);
 router.get("/user/:userId", authMiddleware_1.authenticateToken, dailyLeadController_1.getDailyLeadsByUser);
+router.get("/:id", authMiddleware_1.authenticateToken, dailyLeadController_1.getDailyLeadById);
 router.put("/:id", authMiddleware_1.authenticateToken, dailyLeadController_1.updateDailyLead);
 router.delete("/:id", authMiddleware_1.authenticateToken, dailyLeadController_1.deleteDailyLead);
 exports.default = router;
