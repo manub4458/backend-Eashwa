@@ -17,14 +17,62 @@ exports.getById = exports.deleteDailyLead = exports.updateDailyLead = exports.ge
 const dailyLead_1 = __importDefault(require("../model/dailyLead")); // adjust import path
 const mongoose_1 = require("mongoose");
 const createDailyLead = (data) => __awaiter(void 0, void 0, void 0, function* () {
-    // Optional: you can add validation here if you want
     if (!data.user) {
         throw new Error("user is required");
     }
     if (!data.date) {
         throw new Error("date is required");
     }
-    return yield dailyLead_1.default.create(data);
+    // Normalize date to start of day for query
+    const date = new Date(data.date);
+    date.setHours(0, 0, 0, 0);
+    const nextDay = new Date(date);
+    nextDay.setDate(nextDay.getDate() + 1);
+    let entry = yield dailyLead_1.default.findOne({
+        user: data.user,
+        date: { $gte: date, $lt: nextDay },
+    });
+    const dealerInc = {};
+    if (data.dealerType && data.dealerCount !== undefined && ["new", "old"].includes(data.dealerType)) {
+        const field = `${data.dealerType}Dealers`;
+        dealerInc[field] = data.dealerCount;
+    }
+    if (entry) {
+        // Update existing entry
+        const update = {
+            $set: {},
+        };
+        if (data.numberOfLeads !== undefined)
+            update.$set.numberOfLeads = data.numberOfLeads;
+        if (data.interestedLeads !== undefined)
+            update.$set.interestedLeads = data.interestedLeads;
+        if (data.notInterestedFake !== undefined)
+            update.$set.notInterestedFake = data.notInterestedFake;
+        if (data.nextMonthConnect !== undefined)
+            update.$set.nextMonthConnect = data.nextMonthConnect;
+        if (Object.keys(dealerInc).length > 0) {
+            update.$inc = dealerInc;
+        }
+        entry = yield dailyLead_1.default.findByIdAndUpdate(entry._id, update, { new: true, runValidators: true });
+    }
+    else {
+        // Create new entry
+        const createData = {
+            user: data.user,
+            date: data.date,
+            numberOfLeads: data.numberOfLeads || 0,
+            interestedLeads: data.interestedLeads || 0,
+            notInterestedFake: data.notInterestedFake || 0,
+            nextMonthConnect: data.nextMonthConnect || 0,
+            newDealers: dealerInc.newDealers || 0,
+            oldDealers: dealerInc.oldDealers || 0,
+        };
+        entry = yield dailyLead_1.default.create(createData);
+    }
+    if (!entry) {
+        throw new Error("Failed to create or update daily lead");
+    }
+    return entry;
 });
 exports.createDailyLead = createDailyLead;
 const getAllDailyLeads = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (page = 1, limit = 10, month, year) {
@@ -54,7 +102,8 @@ const getAllDailyLeads = (...args_1) => __awaiter(void 0, [...args_1], void 0, f
                 totalInterested: { $sum: "$interestedLeads" },
                 totalNotInterestedFake: { $sum: "$notInterestedFake" },
                 totalNextMonthConnect: { $sum: "$nextMonthConnect" },
-                totalDealer: { $sum: "$totalDealer" },
+                totalNewDealers: { $sum: "$newDealers" },
+                totalOldDealers: { $sum: "$oldDealers" },
                 count: { $sum: 1 },
             },
         },
@@ -93,7 +142,8 @@ const getDailyLeadsByUser = (userId_1, ...args_1) => __awaiter(void 0, [userId_1
                 totalInterested: { $sum: "$interestedLeads" },
                 totalNotInterestedFake: { $sum: "$notInterestedFake" },
                 totalNextMonthConnect: { $sum: "$nextMonthConnect" },
-                totalDealer: { $sum: "$totalDealer" },
+                totalNewDealers: { $sum: "$newDealers" },
+                totalOldDealers: { $sum: "$oldDealers" },
                 count: { $sum: 1 },
             },
         },
@@ -105,7 +155,33 @@ exports.getDailyLeadsByUser = getDailyLeadsByUser;
 const updateDailyLead = (id, data) => __awaiter(void 0, void 0, void 0, function* () {
     if (!mongoose_1.Types.ObjectId.isValid(id))
         return null;
-    return yield dailyLead_1.default.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+    const dealerInc = {};
+    if (data.dealerType && data.dealerCount !== undefined && ["new", "old"].includes(data.dealerType)) {
+        const field = `${data.dealerType}Dealers`;
+        dealerInc[field] = data.dealerCount;
+    }
+    const update = {};
+    if (Object.keys(dealerInc).length > 0) {
+        update.$inc = dealerInc;
+    }
+    update.$set = {};
+    if (data.numberOfLeads !== undefined)
+        update.$set.numberOfLeads = data.numberOfLeads;
+    if (data.interestedLeads !== undefined)
+        update.$set.interestedLeads = data.interestedLeads;
+    if (data.notInterestedFake !== undefined)
+        update.$set.notInterestedFake = data.notInterestedFake;
+    if (data.nextMonthConnect !== undefined)
+        update.$set.nextMonthConnect = data.nextMonthConnect;
+    if (data.date !== undefined)
+        update.$set.date = data.date;
+    // Note: Updating user is not recommended, but if needed, add here
+    if (Object.keys(update.$set).length === 0)
+        delete update.$set;
+    if (Object.keys(update).length === 0) {
+        return yield dailyLead_1.default.findById(id);
+    }
+    return yield dailyLead_1.default.findByIdAndUpdate(id, update, { new: true, runValidators: true });
 });
 exports.updateDailyLead = updateDailyLead;
 const deleteDailyLead = (id) => __awaiter(void 0, void 0, void 0, function* () {

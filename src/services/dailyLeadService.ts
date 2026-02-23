@@ -3,8 +3,7 @@ import DailyLead from "../model/dailyLead"; // adjust import path
 import { Types } from "mongoose";
 import { IDailyLead } from "../types";
 
-export const createDailyLead = async (data: Partial<IDailyLead>): Promise<IDailyLead> => {
-  // Optional: you can add validation here if you want
+export const createDailyLead = async (data: Partial<IDailyLead> & { dealerType?: "new" | "old"; dealerCount?: number }): Promise<IDailyLead> => {
   if (!data.user) {
     throw new Error("user is required");
   }
@@ -12,7 +11,59 @@ export const createDailyLead = async (data: Partial<IDailyLead>): Promise<IDaily
     throw new Error("date is required");
   }
 
-  return await DailyLead.create(data);
+  // Normalize date to start of day for query
+  const date = new Date(data.date);
+  date.setHours(0, 0, 0, 0);
+  const nextDay = new Date(date);
+  nextDay.setDate(nextDay.getDate() + 1);
+
+  let entry = await DailyLead.findOne({
+    user: data.user,
+    date: { $gte: date, $lt: nextDay },
+  });
+
+  const dealerInc: any = {};
+  if (data.dealerType && data.dealerCount !== undefined && ["new", "old"].includes(data.dealerType)) {
+    const field = `${data.dealerType}Dealers`;
+    dealerInc[field] = data.dealerCount;
+  }
+
+  if (entry) {
+    // Update existing entry
+    const update: any = {
+      $set: {},
+    };
+    if (data.numberOfLeads !== undefined) update.$set.numberOfLeads = data.numberOfLeads;
+    if (data.interestedLeads !== undefined) update.$set.interestedLeads = data.interestedLeads;
+    if (data.notInterestedFake !== undefined) update.$set.notInterestedFake = data.notInterestedFake;
+    if (data.nextMonthConnect !== undefined) update.$set.nextMonthConnect = data.nextMonthConnect;
+
+    if (Object.keys(dealerInc).length > 0) {
+      update.$inc = dealerInc;
+    }
+
+    entry = await DailyLead.findByIdAndUpdate(entry._id, update, { new: true, runValidators: true });
+  } else {
+    // Create new entry
+    const createData: any = {
+      user: data.user,
+      date: data.date,
+      numberOfLeads: data.numberOfLeads || 0,
+      interestedLeads: data.interestedLeads || 0,
+      notInterestedFake: data.notInterestedFake || 0,
+      nextMonthConnect: data.nextMonthConnect || 0,
+      newDealers: dealerInc.newDealers || 0,
+      oldDealers: dealerInc.oldDealers || 0,
+    };
+
+    entry = await DailyLead.create(createData);
+  }
+
+  if (!entry) {
+    throw new Error("Failed to create or update daily lead");
+  }
+
+  return entry;
 };
 
 export const getAllDailyLeads = async (
@@ -49,7 +100,8 @@ export const getAllDailyLeads = async (
         totalInterested: { $sum: "$interestedLeads" },
         totalNotInterestedFake: { $sum: "$notInterestedFake" },
         totalNextMonthConnect: { $sum: "$nextMonthConnect" },
-        totalDealer: { $sum: "$totalDealer" },
+        totalNewDealers: { $sum: "$newDealers" },
+        totalOldDealers: { $sum: "$oldDealers" },
         count: { $sum: 1 },
       },
     },
@@ -98,7 +150,8 @@ export const getDailyLeadsByUser = async (
         totalInterested: { $sum: "$interestedLeads" },
         totalNotInterestedFake: { $sum: "$notInterestedFake" },
         totalNextMonthConnect: { $sum: "$nextMonthConnect" },
-        totalDealer: { $sum: "$totalDealer" },
+        totalNewDealers: { $sum: "$newDealers" },
+        totalOldDealers: { $sum: "$oldDealers" },
         count: { $sum: 1 },
       },
     },
@@ -110,10 +163,36 @@ export const getDailyLeadsByUser = async (
 
 export const updateDailyLead = async (
   id: string,
-  data: Partial<IDailyLead>
+  data: Partial<IDailyLead> & { dealerType?: "new" | "old"; dealerCount?: number }
 ): Promise<IDailyLead | null> => {
   if (!Types.ObjectId.isValid(id)) return null;
-  return await DailyLead.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+
+  const dealerInc: any = {};
+  if (data.dealerType && data.dealerCount !== undefined && ["new", "old"].includes(data.dealerType)) {
+    const field = `${data.dealerType}Dealers`;
+    dealerInc[field] = data.dealerCount;
+  }
+
+  const update: any = {};
+  if (Object.keys(dealerInc).length > 0) {
+    update.$inc = dealerInc;
+  }
+
+  update.$set = {};
+  if (data.numberOfLeads !== undefined) update.$set.numberOfLeads = data.numberOfLeads;
+  if (data.interestedLeads !== undefined) update.$set.interestedLeads = data.interestedLeads;
+  if (data.notInterestedFake !== undefined) update.$set.notInterestedFake = data.notInterestedFake;
+  if (data.nextMonthConnect !== undefined) update.$set.nextMonthConnect = data.nextMonthConnect;
+  if (data.date !== undefined) update.$set.date = data.date;
+  // Note: Updating user is not recommended, but if needed, add here
+
+  if (Object.keys(update.$set).length === 0) delete update.$set;
+
+  if (Object.keys(update).length === 0) {
+    return await DailyLead.findById(id);
+  }
+
+  return await DailyLead.findByIdAndUpdate(id, update, { new: true, runValidators: true });
 };
 
 export const deleteDailyLead = async (id: string): Promise<IDailyLead | null> => {

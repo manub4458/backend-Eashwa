@@ -28,7 +28,11 @@ const dailyLeadSchema = new mongoose_1.Schema({
         type: Number,
         default: 0,
     },
-    totalDealer: {
+    newDealers: {
+        type: Number,
+        default: 0,
+    },
+    oldDealers: {
         type: Number,
         default: 0,
     },

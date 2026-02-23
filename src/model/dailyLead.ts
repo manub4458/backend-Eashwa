@@ -29,7 +29,11 @@ const dailyLeadSchema = new Schema<IDailyLead>(
       type: Number,
       default: 0,
     },
-    totalDealer: {
+    newDealers: {
+      type: Number,
+      default: 0,
+    },
+    oldDealers: {
       type: Number,
       default: 0,
     },

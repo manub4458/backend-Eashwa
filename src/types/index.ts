@@ -88,7 +88,8 @@ export interface IDailyLead extends Document {
   interestedLeads: number;
   notInterestedFake: number;
   nextMonthConnect: number;
-  totalDealer: number;
+  newDealers: number;
+  oldDealers: number;
 }
 
 export interface mUser extends Document {
