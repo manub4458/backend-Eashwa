@@ -49,7 +49,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const formResposne = yield client.messages.create({
             from: "whatsapp:+919911130173",
-            to: `whatsapp:+917723866666`,
+            to: `whatsapp:+919990148011`,
             contentSid: "HXd8e43d7ddd29316e06c8492c56b5748b",
             contentVariables: JSON.stringify({
                 "1": name,
@@ -61,7 +61,7 @@ const submitRequest = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         });
         const secondResponse = yield client.messages.create({
             from: "whatsapp:+919911130173",
-            to: `whatsapp:+917827705405`,
+            to: `whatsapp:+919219509305`,
             contentSid: "HXd8e43d7ddd29316e06c8492c56b5748b",
             contentVariables: JSON.stringify({
                 "1": name,
